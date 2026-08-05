@@ -1,0 +1,6 @@
+{
+  "name": "Tlemcen Car",
+  "description": "Agence de location de voitures de prestige et de luxe à Tlemcen, Algérie. Service d'exception, réservation en ligne et assistance 24/7.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
