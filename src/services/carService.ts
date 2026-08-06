@@ -12,7 +12,12 @@ export interface FilterOptions {
   maxPriceDZD?: number;
 }
 
+let carsCache: Car[] | null = null;
+
 const getStoredCars = (): Car[] => {
+  if (carsCache && carsCache.length > 0) {
+    return carsCache;
+  }
   try {
     const saved = localStorage.getItem('tlemcen_cars');
     if (saved) {
@@ -28,6 +33,10 @@ const getStoredCars = (): Car[] => {
 };
 
 export const carService = {
+  setCarsCache(cars: Car[]): void {
+    carsCache = cars;
+  },
+
   getAllCars(): Car[] {
     return getStoredCars();
   },
@@ -48,8 +57,8 @@ export const carService = {
     return ['Tous', 'Essence', 'Gazole', 'Hybride', 'Électrique'];
   },
 
-  filterCars(options: FilterOptions): Car[] {
-    const allCars = getStoredCars();
+  filterCars(options: FilterOptions, carsList?: Car[]): Car[] {
+    const allCars = carsList && carsList.length > 0 ? carsList : getStoredCars();
     const {
       category = 'Toutes',
       transmission = 'Toutes',

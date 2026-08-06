@@ -53,6 +53,39 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return defaultSettings;
   });
 
+  // Fetch settings from server on initial mount
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/admin/store')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch store');
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted && data && data.settings) {
+          const merged = {
+            ...defaultSettings,
+            ...data.settings,
+            socials: {
+              ...defaultSettings.socials,
+              ...(data.settings.socials || {}),
+            },
+          };
+          setSettings(merged);
+          try {
+            localStorage.setItem('tlemcen_agency_settings', JSON.stringify(merged));
+          } catch (e) {}
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load settings from server, using local fallback:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Automatically update localStorage, page title, favicon, and primary color CSS variable
   useEffect(() => {
     try {
@@ -84,12 +117,24 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [settings]);
 
+  const saveSettingsToServer = (newSettings: AgencySettings) => {
+    fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: newSettings }),
+    }).catch((err) => {
+      console.error('Failed to sync settings to server:', err);
+    });
+  };
+
   const updateSettings = (newSettings: AgencySettings) => {
     setSettings(newSettings);
+    saveSettingsToServer(newSettings);
   };
 
   const resetSettings = () => {
     setSettings(defaultSettings);
+    saveSettingsToServer(defaultSettings);
   };
 
   return (

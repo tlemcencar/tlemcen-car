@@ -4,6 +4,7 @@ import { AgencySettings, ToastMessage } from '../types/admin';
 import { CARS_DATA } from '../data/carsData';
 import { AGENCY_DETAILS } from '../utils/constants';
 import { useSettings } from './SettingsContext';
+import { carService } from '../services/carService';
 
 interface AdminDataContextType {
   cars: Car[];
@@ -150,7 +151,7 @@ const defaultInitialBookings: BookingRequest[] = [
 const AdminDataContext = createContext<AdminDataContextType | undefined>(undefined);
 
 export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // 1. Cars state with LocalStorage persistence
+  // 1. Cars state
   const [cars, setCars] = useState<Car[]>(() => {
     let initialList = CARS_DATA;
     try {
@@ -165,24 +166,18 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error('Error reading cars from localStorage', e);
     }
 
-    return initialList.map((c) => ({
+    const formatted = initialList.map((c) => ({
       ...c,
       reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
     }));
+    carService.setCarsCache(formatted);
+    return formatted;
   });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('tlemcen_cars', JSON.stringify(cars));
-    } catch (e) {
-      console.error('Error saving cars to localStorage', e);
-    }
-  }, [cars]);
 
   // 2. Settings state from SettingsContext
   const { settings, updateSettings: setGlobalSettings } = useSettings();
 
-  // 3. Bookings state with LocalStorage persistence
+  // 3. Bookings state
   const [bookings, setBookings] = useState<BookingRequest[]>(() => {
     try {
       const saved = localStorage.getItem('tlemcen_bookings');
@@ -198,6 +193,55 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return defaultInitialBookings;
   });
 
+  // Fetch full store from server on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/admin/store')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch store');
+        return res.json();
+      })
+      .then((data) => {
+        if (!isMounted || !data) return;
+
+        if (Array.isArray(data.cars) && data.cars.length > 0) {
+          const formattedCars = data.cars.map((c: any) => ({
+            ...c,
+            reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
+          }));
+          setCars(formattedCars);
+          carService.setCarsCache(formattedCars);
+          try {
+            localStorage.setItem('tlemcen_cars', JSON.stringify(formattedCars));
+          } catch (e) {}
+        }
+
+        if (Array.isArray(data.bookings) && data.bookings.length > 0) {
+          setBookings(data.bookings);
+          try {
+            localStorage.setItem('tlemcen_bookings', JSON.stringify(data.bookings));
+          } catch (e) {}
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load admin store from server, using local fallback:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Synchronize cars cache and localStorage whenever cars state changes
+  useEffect(() => {
+    carService.setCarsCache(cars);
+    try {
+      localStorage.setItem('tlemcen_cars', JSON.stringify(cars));
+    } catch (e) {
+      console.error('Error saving cars to localStorage', e);
+    }
+  }, [cars]);
+
   useEffect(() => {
     try {
       localStorage.setItem('tlemcen_bookings', JSON.stringify(bookings));
@@ -205,6 +249,27 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error('Error saving bookings to localStorage', e);
     }
   }, [bookings]);
+
+  // Helper methods to post updates to server
+  const saveCarsToServer = (updatedCars: Car[]) => {
+    fetch('/api/admin/cars', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cars: updatedCars }),
+    }).catch((err) => {
+      console.error('Failed to sync cars to server:', err);
+    });
+  };
+
+  const saveBookingsToServer = (updatedBookings: BookingRequest[]) => {
+    fetch('/api/admin/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookings: updatedBookings }),
+    }).catch((err) => {
+      console.error('Failed to sync bookings to server:', err);
+    });
+  };
 
   // 4. Toast notifications state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -229,22 +294,27 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const newCar: Car = {
       ...carData,
       id: newId,
+      reservationUrl: carData.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(carData.carId || newId)}&embed=true&theme=emerald`
     };
-    setCars((prev) => [newCar, ...prev]);
+    const updated = [newCar, ...cars];
+    setCars(updated);
+    saveCarsToServer(updated);
     showToast('success', 'Véhicule ajouté !', `${newCar.name} a été créé avec succès.`);
     return newCar;
   };
 
   const updateCar = (id: string, carData: Partial<Car>) => {
-    setCars((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...carData } : c))
-    );
+    const updated = cars.map((c) => (c.id === id ? { ...c, ...carData } : c));
+    setCars(updated);
+    saveCarsToServer(updated);
     showToast('success', 'Modifications enregistrées', `La fiche du véhicule a été mise à jour.`);
   };
 
   const deleteCar = (id: string) => {
     const carToDelete = cars.find((c) => c.id === id);
-    setCars((prev) => prev.filter((c) => c.id !== id));
+    const updated = cars.filter((c) => c.id !== id);
+    setCars(updated);
+    saveCarsToServer(updated);
     showToast('info', 'Véhicule supprimé', `${carToDelete?.name || 'Le véhicule'} a été retiré de la flotte.`);
   };
 
@@ -259,23 +329,25 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       name: `${target.name} (Copie)`,
       featured: false,
     };
-    setCars((prev) => [copy, ...prev]);
+    const updated = [copy, ...cars];
+    setCars(updated);
+    saveCarsToServer(updated);
     showToast('success', 'Véhicule dupliqué !', `Une copie de "${target.name}" a été créée.`);
   };
 
   const toggleCarStatus = (id: string, newAvailable: boolean, nextDate?: string) => {
-    setCars((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          return {
-            ...c,
-            available: newAvailable,
-            nextAvailableDate: newAvailable ? undefined : (nextDate || 'Demain à 14:00'),
-          };
-        }
-        return c;
-      })
-    );
+    const updated = cars.map((c) => {
+      if (c.id === id) {
+        return {
+          ...c,
+          available: newAvailable,
+          nextAvailableDate: newAvailable ? undefined : (nextDate || 'Demain à 14:00'),
+        };
+      }
+      return c;
+    });
+    setCars(updated);
+    saveCarsToServer(updated);
     showToast(
       newAvailable ? 'success' : 'warning',
       newAvailable ? 'Véhicule Activé' : 'Véhicule Loué / Réservé',
@@ -291,19 +363,23 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Booking operations
   const addBooking = (booking: BookingRequest) => {
-    setBookings((prev) => [booking, ...prev]);
+    const updated = [booking, ...bookings];
+    setBookings(updated);
+    saveBookingsToServer(updated);
     showToast('success', 'Nouvelle réservation enregistrée', `Réservation pour ${booking.carName} créée.`);
   };
 
   const updateBookingStatus = (id: string, status: BookingRequest['status']) => {
-    setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status } : b))
-    );
+    const updated = bookings.map((b) => (b.id === id ? { ...b, status } : b));
+    setBookings(updated);
+    saveBookingsToServer(updated);
     showToast('info', 'Statut mis à jour', `La réservation ${id} est désormais ${status}.`);
   };
 
   const deleteBooking = (id: string) => {
-    setBookings((prev) => prev.filter((b) => b.id !== id));
+    const updated = bookings.filter((b) => b.id !== id);
+    setBookings(updated);
+    saveBookingsToServer(updated);
     showToast('warning', 'Réservation annulée', `La réservation ${id} a été supprimée.`);
   };
 
