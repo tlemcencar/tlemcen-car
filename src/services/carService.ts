@@ -18,17 +18,6 @@ const getStoredCars = (): Car[] => {
   if (carsCache && carsCache.length > 0) {
     return carsCache;
   }
-  try {
-    const saved = localStorage.getItem('tlemcen_cars');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.error('Error reading cars from localStorage in carService', e);
-  }
   return CARS_DATA;
 };
 

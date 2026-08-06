@@ -10,14 +10,10 @@ interface CurrencyContextType {
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currency, setCurrencyState] = useState<Currency>(() => {
-    const saved = localStorage.getItem('tlemcen_car_currency');
-    return (saved === 'EUR' || saved === 'DZD') ? saved : 'DZD';
-  });
+  const [currency, setCurrencyState] = useState<Currency>('DZD');
 
   const setCurrency = (curr: Currency) => {
     setCurrencyState(curr);
-    localStorage.setItem('tlemcen_car_currency', curr);
   };
 
   const toggleCurrency = () => {

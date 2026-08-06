@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AgencySettings } from '../types/admin';
 import { AGENCY_DETAILS } from '../utils/constants';
+import {
+  fetchFromSupabase,
+  saveSettingsToSupabase,
+  setSupabaseCredentials,
+  isSupabaseConfigured,
+} from '../lib/supabase';
 
 export const defaultSettings: AgencySettings = {
   name: AGENCY_DETAILS.name,
@@ -22,6 +28,29 @@ export const defaultSettings: AgencySettings = {
     tiktok: 'https://tiktok.com/@tlemcencar',
     youtube: 'https://youtube.com/@tlemcencar',
   },
+  seo: {
+    metaTitle: 'Tlemcen Car Luxury & Prestige - Location de Voitures VIP à Tlemcen',
+    metaDescription: 'Louez des véhicules de prestige à Tlemcen et à l\'Aéroport Messali Hadj Zenata. Mercedes G63, Porsche 911, Range Rover, Audi RS6.',
+    keywords: 'location voiture tlemcen, location voiture luxe algerie, mercedes g63 tlemcen, aeroport zenata car rental',
+  },
+  theme: {
+    mode: 'dark',
+    secondaryColor: '#12121c',
+    accentColor: '#ff2e4d',
+  },
+  animations: {
+    enabled: true,
+    speed: 'normal',
+    pageTransitions: true,
+  },
+  iframes: {
+    reservationEmbedUrl: 'https://tlemcen-car.onrender.com/?embed=true&theme=emerald',
+  },
+  general: {
+    currencyDefault: 'DZD',
+    minRentalDays: 1,
+    depositRequirement: true,
+  },
 };
 
 interface SettingsContextType {
@@ -33,70 +62,83 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<AgencySettings>(() => {
-    try {
-      const saved = localStorage.getItem('tlemcen_agency_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...defaultSettings,
-          ...parsed,
-          socials: {
-            ...defaultSettings.socials,
-            ...(parsed.socials || {}),
-          },
-        };
-      }
-    } catch (e) {
-      console.error('Error reading settings from localStorage', e);
-    }
-    return defaultSettings;
-  });
+  const [settings, setSettings] = useState<AgencySettings>(defaultSettings);
 
-  // Fetch settings from server on initial mount
+  // Fetch settings from Supabase / Express server on initial mount
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/admin/store')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch store');
-        return res.json();
-      })
-      .then((data) => {
-        if (isMounted && data && data.settings) {
+
+    async function loadSettings() {
+      // First attempt: fetch from Supabase if client configured
+      try {
+        const { settings: sbSettings } = await fetchFromSupabase();
+        if (isMounted && sbSettings) {
           const merged = {
             ...defaultSettings,
-            ...data.settings,
-            socials: {
-              ...defaultSettings.socials,
-              ...(data.settings.socials || {}),
-            },
+            ...sbSettings,
+            socials: { ...defaultSettings.socials, ...(sbSettings.socials || {}) },
+            seo: { ...defaultSettings.seo, ...(sbSettings.seo || {}) },
+            theme: { ...defaultSettings.theme, ...(sbSettings.theme || {}) },
+            animations: { ...defaultSettings.animations, ...(sbSettings.animations || {}) },
+            iframes: { ...defaultSettings.iframes, ...(sbSettings.iframes || {}) },
+            general: { ...defaultSettings.general, ...(sbSettings.general || {}) },
           };
           setSettings(merged);
-          try {
-            localStorage.setItem('tlemcen_agency_settings', JSON.stringify(merged));
-          } catch (e) {}
+          if (merged.supabaseConfig?.url && merged.supabaseConfig?.anonKey) {
+            setSupabaseCredentials(merged.supabaseConfig.url, merged.supabaseConfig.anonKey);
+          }
+          return;
         }
-      })
-      .catch((err) => {
-        console.warn('Could not load settings from server, using local fallback:', err);
-      });
+      } catch (err) {
+        console.warn('Supabase fetch failed or not configured, trying server endpoint:', err);
+      }
+
+      // Second attempt: fetch from Express server /api/admin/store
+      try {
+        const res = await fetch('/api/admin/store');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data && data.settings) {
+            const merged = {
+              ...defaultSettings,
+              ...data.settings,
+              socials: { ...defaultSettings.socials, ...(data.settings.socials || {}) },
+            };
+            setSettings(merged);
+            if (merged.supabaseConfig?.url && merged.supabaseConfig?.anonKey) {
+              setSupabaseCredentials(merged.supabaseConfig.url, merged.supabaseConfig.anonKey);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Server store fetch fallback warning:', err);
+      }
+    }
+
+    loadSettings();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Automatically update localStorage, page title, favicon, and primary color CSS variable
+  // Update document metadata, favicon, title, and theme dynamically
   useEffect(() => {
-    try {
-      localStorage.setItem('tlemcen_agency_settings', JSON.stringify(settings));
-    } catch (e) {
-      console.error('Error saving settings to localStorage', e);
-    }
-
     // Update document title
     if (settings.name) {
-      document.title = `${settings.name} | ${settings.tagline || 'Location de Voitures de Luxe'}`;
+      const title = settings.seo?.metaTitle || `${settings.name} | ${settings.tagline || 'Location de Voitures de Luxe'}`;
+      document.title = title;
+    }
+
+    // Update meta description
+    if (settings.seo?.metaDescription) {
+      let metaDesc = document.querySelector("meta[name='description']") as HTMLMetaElement;
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.name = 'description';
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.content = settings.seo.metaDescription;
     }
 
     // Update favicon dynamically
@@ -117,7 +159,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [settings]);
 
-  const saveSettingsToServer = (newSettings: AgencySettings) => {
+  const saveSettings = async (newSettings: AgencySettings) => {
+    setSettings(newSettings);
+
+    // If Supabase config present, initialize credentials
+    if (newSettings.supabaseConfig?.url && newSettings.supabaseConfig?.anonKey) {
+      setSupabaseCredentials(newSettings.supabaseConfig.url, newSettings.supabaseConfig.anonKey);
+    }
+
+    // Save directly to Supabase
+    const savedSb = await saveSettingsToSupabase(newSettings);
+    if (!savedSb) {
+      console.warn('Could not save settings directly to Supabase, syncing to server...');
+    }
+
+    // Always sync to server API endpoint as well
     fetch('/api/admin/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -128,13 +184,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const updateSettings = (newSettings: AgencySettings) => {
-    setSettings(newSettings);
-    saveSettingsToServer(newSettings);
+    saveSettings(newSettings);
   };
 
   const resetSettings = () => {
-    setSettings(defaultSettings);
-    saveSettingsToServer(defaultSettings);
+    saveSettings(defaultSettings);
   };
 
   return (

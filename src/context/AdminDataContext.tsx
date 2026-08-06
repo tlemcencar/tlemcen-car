@@ -5,6 +5,13 @@ import { CARS_DATA } from '../data/carsData';
 import { AGENCY_DETAILS } from '../utils/constants';
 import { useSettings } from './SettingsContext';
 import { carService } from '../services/carService';
+import {
+  fetchFromSupabase,
+  saveCarsToSupabase,
+  deleteCarFromSupabase,
+  saveBookingsToSupabase,
+  deleteBookingFromSupabase,
+} from '../lib/supabase';
 
 interface AdminDataContextType {
   cars: Car[];
@@ -153,20 +160,7 @@ const AdminDataContext = createContext<AdminDataContextType | undefined>(undefin
 export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Cars state
   const [cars, setCars] = useState<Car[]>(() => {
-    let initialList = CARS_DATA;
-    try {
-      const saved = localStorage.getItem('tlemcen_cars');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          initialList = parsed;
-        }
-      }
-    } catch (e) {
-      console.error('Error reading cars from localStorage', e);
-    }
-
-    const formatted = initialList.map((c) => ({
+    const formatted = CARS_DATA.map((c) => ({
       ...c,
       reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
     }));
@@ -178,80 +172,78 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { settings, updateSettings: setGlobalSettings } = useSettings();
 
   // 3. Bookings state
-  const [bookings, setBookings] = useState<BookingRequest[]>(() => {
-    try {
-      const saved = localStorage.getItem('tlemcen_bookings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error('Error reading bookings from localStorage', e);
-    }
-    return defaultInitialBookings;
-  });
+  const [bookings, setBookings] = useState<BookingRequest[]>(defaultInitialBookings);
 
-  // Fetch full store from server on mount
+  // Fetch full store from Supabase / Express server on mount
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/admin/store')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch store');
-        return res.json();
-      })
-      .then((data) => {
-        if (!isMounted || !data) return;
 
-        if (Array.isArray(data.cars) && data.cars.length > 0) {
-          const formattedCars = data.cars.map((c: any) => ({
+    async function loadData() {
+      // First attempt: Supabase
+      try {
+        const { cars: sbCars, bookings: sbBookings } = await fetchFromSupabase();
+
+        if (isMounted && sbCars && Array.isArray(sbCars) && sbCars.length > 0) {
+          const formattedCars = sbCars.map((c) => ({
             ...c,
             reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
           }));
           setCars(formattedCars);
           carService.setCarsCache(formattedCars);
-          try {
-            localStorage.setItem('tlemcen_cars', JSON.stringify(formattedCars));
-          } catch (e) {}
         }
 
-        if (Array.isArray(data.bookings) && data.bookings.length > 0) {
-          setBookings(data.bookings);
-          try {
-            localStorage.setItem('tlemcen_bookings', JSON.stringify(data.bookings));
-          } catch (e) {}
+        if (isMounted && sbBookings && Array.isArray(sbBookings) && sbBookings.length > 0) {
+          setBookings(sbBookings);
         }
-      })
-      .catch((err) => {
-        console.warn('Could not load admin store from server, using local fallback:', err);
-      });
+
+        if (sbCars || sbBookings) return;
+      } catch (err) {
+        console.warn('Supabase load failed or not configured, trying server endpoint:', err);
+      }
+
+      // Second attempt: Express server fallback
+      try {
+        const res = await fetch('/api/admin/store');
+        if (res.ok) {
+          const data = await res.json();
+          if (!isMounted || !data) return;
+
+          if (Array.isArray(data.cars) && data.cars.length > 0) {
+            const formattedCars = data.cars.map((c: any) => ({
+              ...c,
+              reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
+            }));
+            setCars(formattedCars);
+            carService.setCarsCache(formattedCars);
+          }
+
+          if (Array.isArray(data.bookings) && data.bookings.length > 0) {
+            setBookings(data.bookings);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load admin store from server:', err);
+      }
+    }
+
+    loadData();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Synchronize cars cache and localStorage whenever cars state changes
+  // Synchronize cars cache whenever cars state changes
   useEffect(() => {
     carService.setCarsCache(cars);
-    try {
-      localStorage.setItem('tlemcen_cars', JSON.stringify(cars));
-    } catch (e) {
-      console.error('Error saving cars to localStorage', e);
-    }
   }, [cars]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('tlemcen_bookings', JSON.stringify(bookings));
-    } catch (e) {
-      console.error('Error saving bookings to localStorage', e);
-    }
-  }, [bookings]);
-
-  // Helper methods to post updates to server
+  // Helper methods to post updates to Supabase and Server
   const saveCarsToServer = (updatedCars: Car[]) => {
+    // Save directly to Supabase
+    saveCarsToSupabase(updatedCars);
+
+    // Sync with Server endpoint
     fetch('/api/admin/cars', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -262,6 +254,10 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const saveBookingsToServer = (updatedBookings: BookingRequest[]) => {
+    // Save directly to Supabase
+    saveBookingsToSupabase(updatedBookings);
+
+    // Sync with Server endpoint
     fetch('/api/admin/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -314,6 +310,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const carToDelete = cars.find((c) => c.id === id);
     const updated = cars.filter((c) => c.id !== id);
     setCars(updated);
+    deleteCarFromSupabase(id);
     saveCarsToServer(updated);
     showToast('info', 'Véhicule supprimé', `${carToDelete?.name || 'Le véhicule'} a été retiré de la flotte.`);
   };
@@ -379,6 +376,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const deleteBooking = (id: string) => {
     const updated = bookings.filter((b) => b.id !== id);
     setBookings(updated);
+    deleteBookingFromSupabase(id);
     saveBookingsToServer(updated);
     showToast('warning', 'Réservation annulée', `La réservation ${id} a été supprimée.`);
   };
