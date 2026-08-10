@@ -120,11 +120,11 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
       if (success) {
         onClose();
       } else {
-        setErrorMessage("L'enregistrement dans Supabase a échoué. Veuillez vérifier la console ou l'état de Supabase.");
+        setErrorMessage("Erreur d'enregistrement. Vérifiez les champs ou la configuration Supabase.");
       }
     } catch (err: any) {
       console.error("Erreur handleSubmit car modal:", err);
-      setErrorMessage(err?.message || "Erreur de sauvegarde dans Supabase.");
+      setErrorMessage(err?.message || "Erreur lors de la sauvegarde du véhicule.");
     } finally {
       setIsSaving(false);
     }
@@ -629,12 +629,12 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Enregistrement dans Supabase...</span>
+                    <span>Enregistrement en cours...</span>
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    <span>{car ? 'Enregistrer les Modifications dans Supabase' : 'Créer le Véhicule dans Supabase'}</span>
+                    <span>{car ? 'Enregistrer les Modifications' : 'Créer le Véhicule'}</span>
                   </>
                 )}
               </button>

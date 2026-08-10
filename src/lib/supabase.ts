@@ -13,6 +13,22 @@ let runtimeSupabaseKey: string =
   (typeof process !== 'undefined' && process.env && (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)) ||
   '';
 
+// Attempt restoring from localStorage if empty
+if ((!runtimeSupabaseUrl || !runtimeSupabaseKey) && typeof window !== 'undefined' && window.localStorage) {
+  try {
+    const savedSettings = localStorage.getItem('tlemcen_agency_settings');
+    if (savedSettings) {
+      const parsed = JSON.parse(savedSettings);
+      if (parsed?.supabaseConfig?.url && parsed?.supabaseConfig?.anonKey) {
+        runtimeSupabaseUrl = parsed.supabaseConfig.url.trim();
+        runtimeSupabaseKey = parsed.supabaseConfig.anonKey.trim();
+      }
+    }
+  } catch (e) {
+    // Ignore error
+  }
+}
+
 let supabaseInstance: SupabaseClient | null = null;
 
 export const setSupabaseCredentials = (url: string, key: string) => {
@@ -36,6 +52,24 @@ export const getSupabaseCredentials = () => {
 
 export const getSupabaseClient = (): SupabaseClient | null => {
   if (supabaseInstance) return supabaseInstance;
+  
+  if (!runtimeSupabaseUrl || !runtimeSupabaseKey) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const savedSettings = localStorage.getItem('tlemcen_agency_settings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          if (parsed?.supabaseConfig?.url && parsed?.supabaseConfig?.anonKey) {
+            runtimeSupabaseUrl = parsed.supabaseConfig.url.trim();
+            runtimeSupabaseKey = parsed.supabaseConfig.anonKey.trim();
+          }
+        }
+      } catch (e) {
+        // Ignore error
+      }
+    }
+  }
+
   if (runtimeSupabaseUrl && runtimeSupabaseKey) {
     try {
       supabaseInstance = createClient(runtimeSupabaseUrl, runtimeSupabaseKey);

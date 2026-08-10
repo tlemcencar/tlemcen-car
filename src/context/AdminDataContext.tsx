@@ -241,6 +241,14 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Helper methods to post updates to Supabase and Server
   const saveCarsToServer = (updatedCars: Car[]) => {
+    // Save to localStorage cache
+    try {
+      localStorage.setItem('tlemcen_cars_cache', JSON.stringify(updatedCars));
+    } catch (e) {
+      // ignore
+    }
+    carService.setCarsCache(updatedCars);
+
     // Save directly to Supabase
     saveCarsToSupabase(updatedCars);
 
@@ -255,6 +263,13 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const saveBookingsToServer = (updatedBookings: BookingRequest[]) => {
+    // Save to localStorage cache
+    try {
+      localStorage.setItem('tlemcen_bookings_cache', JSON.stringify(updatedBookings));
+    } catch (e) {
+      // ignore
+    }
+
     // Save directly to Supabase
     saveBookingsToSupabase(updatedBookings);
 
@@ -289,8 +304,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const reloadCarsFromSupabase = async (): Promise<Car[]> => {
     const res = await carService.fetchCars();
     if (res.error) {
-      console.error('Erreur lors du rechargement Supabase:', res.error);
-      showToast('error', 'Erreur de rechargement Supabase', res.error);
+      console.warn('Erreur lors du rechargement Supabase:', res.error);
+      showToast('warning', 'Statut Supabase', res.error);
       return cars;
     }
     if (res.cars && Array.isArray(res.cars)) {
@@ -305,7 +320,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return cars;
   };
 
-  // Car CRUD Operations with mandatory Supabase verification
+  // Car CRUD Operations with local persistence & Supabase sync
   const addCar = async (carData: Omit<Car, 'id'>): Promise<{ success: boolean; car?: Car; error?: string }> => {
     const newId = (carData.brand || 'car').toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
     const newCar: Car = {
@@ -315,20 +330,25 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       reservationUrl: carData.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(carData.carId || newId)}&embed=true&theme=emerald`
     };
 
-    // 1. Save directly to Supabase with INSERT
+    // 1. Save locally in React state, local cache & server store first
+    const nextCars = [newCar, ...cars];
+    setCars(nextCars);
+    saveCarsToServer(nextCars);
+
+    // 2. Sync directly with Supabase
     const saveRes = await carService.saveCar(newCar, false);
 
     if (!saveRes.success) {
-      console.error('Erreur Supabase INSERT voiture:', saveRes.error);
-      showToast('error', 'Erreur de sauvegarde Supabase', saveRes.error || 'Échec de l\'insertion Supabase');
-      return { success: false, error: saveRes.error };
+      console.warn('Avertissement Supabase INSERT voiture:', saveRes.error);
+      showToast(
+        'warning',
+        'Enregistré (Mode Local)',
+        `Le véhicule "${newCar.name}" est enregistré localement. Supabase: ${saveRes.error || 'Erreur de connexion'}`
+      );
+      return { success: true, car: newCar, error: saveRes.error };
     }
 
-    // 2. Reload data from Supabase to confirm
-    await reloadCarsFromSupabase();
-
-    // 3. Show success message after confirmation
-    showToast('success', 'Enregistré avec succès', `${newCar.name} a été enregistré dans Supabase.`);
+    showToast('success', 'Enregistré dans Supabase', `${newCar.name} a été enregistré et synchronisé avec Supabase.`);
     return { success: true, car: newCar };
   };
 
@@ -340,37 +360,50 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       id, // Preserve exact ID
     };
 
-    // 1. Save directly to Supabase with UPDATE
+    // 1. Save locally in React state, local cache & server store first
+    const nextCars = cars.map((c) => (c.id === id ? updatedCar : c));
+    setCars(nextCars);
+    saveCarsToServer(nextCars);
+
+    // 2. Sync directly with Supabase
     const saveRes = await carService.saveCar(updatedCar, true);
 
     if (!saveRes.success) {
-      console.error(`Erreur Supabase UPDATE voiture ${id}:`, saveRes.error);
-      showToast('error', 'Erreur de sauvegarde Supabase', saveRes.error || 'Échec de la mise à jour Supabase');
-      return { success: false, error: saveRes.error };
+      console.warn(`Avertissement Supabase UPDATE voiture ${id}:`, saveRes.error);
+      showToast(
+        'warning',
+        'Modifié (Mode Local)',
+        `Modifications enregistrées localement. Supabase: ${saveRes.error || 'Erreur de connexion'}`
+      );
+      return { success: true, error: saveRes.error };
     }
 
-    // 2. Reload data from Supabase to confirm write
-    await reloadCarsFromSupabase();
-
-    // 3. Show success message after confirmation
-    showToast('success', 'Enregistré avec succès', `La modification de "${updatedCar.name}" a été enregistrée dans Supabase.`);
+    showToast('success', 'Synchronisé Supabase', `La modification de "${updatedCar.name}" a été enregistrée dans Supabase.`);
     return { success: true };
   };
 
   const deleteCar = async (id: string): Promise<{ success: boolean; error?: string }> => {
     const carToDelete = cars.find((c) => c.id === id);
+
+    // 1. Delete locally in React state, local cache & server store first
+    const nextCars = cars.filter((c) => c.id !== id);
+    setCars(nextCars);
+    saveCarsToServer(nextCars);
+
+    // 2. Sync directly with Supabase
     const res = await carService.deleteCar(id);
 
     if (!res.success) {
-      console.error(`Erreur Supabase DELETE voiture ${id}:`, res.error);
-      showToast('error', 'Erreur de suppression Supabase', res.error || 'Échec de la suppression Supabase');
-      return { success: false, error: res.error };
+      console.warn(`Avertissement Supabase DELETE voiture ${id}:`, res.error);
+      showToast(
+        'warning',
+        'Supprimé (Mode Local)',
+        `Suppression appliquée localement. Supabase: ${res.error || 'Erreur'}`
+      );
+      return { success: true, error: res.error };
     }
 
-    // Reload data from Supabase to confirm deletion
-    await reloadCarsFromSupabase();
-
-    showToast('info', 'Enregistré avec succès', `${carToDelete?.name || 'Le véhicule'} a été supprimé de Supabase.`);
+    showToast('info', 'Supprimé de Supabase', `${carToDelete?.name || 'Le véhicule'} a été supprimé de Supabase.`);
     return { success: true };
   };
 
