@@ -7,7 +7,7 @@ import { X, Check, Plus, Trash2, Car as CarIcon, Sparkles, Shield, Fuel, Gauge, 
 interface CarFormModalProps {
   isOpen: boolean;
   car: Car | null; // null means adding a new car
-  onSave: (carData: Omit<Car, 'id'> | Partial<Car>) => Promise<{ success: boolean; error?: string }>;
+  onSave: (carData: Omit<Car, 'id'> | Partial<Car>) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -111,16 +111,16 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
       : `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(effectiveCarId)}&embed=true&theme=emerald`;
 
     try {
-      const result = await onSave({
+      const success = await onSave({
         ...formData,
         carId: effectiveCarId,
         reservationUrl: effectiveReservationUrl,
       } as Omit<Car, 'id'>);
 
-      if (result.success) {
+      if (success) {
         onClose();
       } else {
-        setErrorMessage(result.error || "L'enregistrement dans Supabase a échoué. Veuillez vérifier la console ou l'état de Supabase.");
+        setErrorMessage("L'enregistrement dans Supabase a échoué. Veuillez vérifier la console ou l'état de Supabase.");
       }
     } catch (err: any) {
       console.error("Erreur handleSubmit car modal:", err);

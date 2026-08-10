@@ -14,49 +14,6 @@ let runtimeSupabaseKey: string =
   '';
 
 let supabaseInstance: SupabaseClient | null = null;
-let configFetchPromise: Promise<boolean> | null = null;
-
-export const ensureSupabaseConfigured = async (): Promise<boolean> => {
-  if (runtimeSupabaseUrl && runtimeSupabaseKey) {
-    if (!supabaseInstance) {
-      try {
-        supabaseInstance = createClient(runtimeSupabaseUrl, runtimeSupabaseKey);
-      } catch (err) {
-        console.error('Failed to create Supabase client:', err);
-      }
-    }
-    return Boolean(supabaseInstance);
-  }
-
-  if (configFetchPromise) {
-    return configFetchPromise;
-  }
-
-  configFetchPromise = (async () => {
-    try {
-      if (typeof window !== 'undefined' && typeof fetch === 'function') {
-        const res = await fetch('/api/supabase-config');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.url && data.key) {
-            setSupabaseCredentials(data.url, data.key);
-            return true;
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Impossible de récupérer la config Supabase via /api/supabase-config:', err);
-    }
-    return false;
-  })();
-
-  return configFetchPromise;
-};
-
-// Auto-trigger config check on client side
-if (typeof window !== 'undefined') {
-  ensureSupabaseConfigured().catch(() => {});
-}
 
 export const setSupabaseCredentials = (url: string, key: string) => {
   if (url && key) {
@@ -208,7 +165,6 @@ export const fetchFromSupabase = async (): Promise<{
   cars: Car[] | null;
   bookings: BookingRequest[] | null;
 }> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { settings: null, cars: null, bookings: null };
@@ -256,7 +212,6 @@ export const fetchFromSupabase = async (): Promise<{
  * Save settings to Supabase
  */
 export const saveSettingsToSupabase = async (settings: AgencySettings): Promise<boolean> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
@@ -293,7 +248,6 @@ export const saveSettingsToSupabase = async (settings: AgencySettings): Promise<
  * Fetch cars list directly from Supabase table public.cars
  */
 export const fetchCarsFromSupabase = async (): Promise<{ cars: Car[] | null; error?: string }> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { cars: null, error: 'Client Supabase non configuré (URL ou Clé manquante)' };
@@ -335,9 +289,8 @@ export const fetchCarsFromSupabase = async (): Promise<{ cars: Car[] | null; err
  */
 export const saveCarToSupabase = async (
   car: Car,
-  _isExisting?: boolean
+  isExisting?: boolean
 ): Promise<{ success: boolean; error?: string }> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { success: false, error: 'Client Supabase non initialisé (vérifiez SUPABASE_URL et SUPABASE_ANON_KEY)' };
@@ -353,21 +306,65 @@ export const saveCarToSupabase = async (
 
     const updated_at = new Date().toISOString();
 
-    // Directly upsert row in public.cars table (creates if new, updates if exists)
-    const { error } = await supabase
-      .from('cars')
-      .upsert(
-        {
-          id: carId,
+    // 1. If explicit UPDATE for existing car
+    if (isExisting) {
+      const { data: updateData, error: updateError } = await supabase
+        .from('cars')
+        .update({
           data: carToStore,
           updated_at,
-        },
-        { onConflict: 'id' }
-      );
+        })
+        .eq('id', carId)
+        .select();
 
-    if (error) {
-      const errMsg = error.message || error.details || error.hint || JSON.stringify(error);
-      console.error(`Erreur Supabase UPSERT car ${carId}:`, error);
+      if (updateError) {
+        const errMsg = updateError.message || updateError.details || String(updateError);
+        console.error(`Erreur Supabase UPDATE car ${carId}:`, updateError);
+        return { success: false, error: errMsg };
+      }
+
+      // If update matched 0 rows, fallback to upsert
+      if (!updateData || updateData.length === 0) {
+        const { error: upsertErr } = await supabase
+          .from('cars')
+          .upsert({ id: carId, data: carToStore, updated_at }, { onConflict: 'id' });
+
+        if (upsertErr) {
+          const errMsg = upsertErr.message || upsertErr.details || String(upsertErr);
+          console.error(`Erreur Supabase UPSERT fallback car ${carId}:`, upsertErr);
+          return { success: false, error: errMsg };
+        }
+      }
+
+      return { success: true };
+    }
+
+    // 2. Otherwise INSERT for new car
+    const { error: insertError } = await supabase.from('cars').insert([
+      {
+        id: carId,
+        data: carToStore,
+        updated_at,
+      },
+    ]);
+
+    if (insertError) {
+      // If error is duplicate key, try upsert
+      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
+        const { error: upsertError } = await supabase
+          .from('cars')
+          .upsert({ id: carId, data: carToStore, updated_at }, { onConflict: 'id' });
+
+        if (upsertError) {
+          const errMsg = upsertError.message || upsertError.details || String(upsertError);
+          console.error(`Erreur Supabase UPSERT car ${carId}:`, upsertError);
+          return { success: false, error: errMsg };
+        }
+        return { success: true };
+      }
+
+      const errMsg = insertError.message || insertError.details || String(insertError);
+      console.error(`Erreur Supabase INSERT car ${carId}:`, insertError);
       return { success: false, error: errMsg };
     }
 
@@ -383,7 +380,6 @@ export const saveCarToSupabase = async (
  * Save cars list to Supabase (bulk helper)
  */
 export const saveCarsToSupabase = async (cars: Car[]): Promise<boolean> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
@@ -443,7 +439,6 @@ export const saveCarsToSupabase = async (cars: Car[]): Promise<boolean> => {
 export const deleteCarFromSupabase = async (
   carId: string
 ): Promise<{ success: boolean; error?: string }> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { success: false, error: 'Client Supabase non initialisé.' };
@@ -468,7 +463,6 @@ export const deleteCarFromSupabase = async (
  * Save bookings list to Supabase
  */
 export const saveBookingsToSupabase = async (bookings: BookingRequest[]): Promise<boolean> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
@@ -523,7 +517,6 @@ export const saveBookingsToSupabase = async (bookings: BookingRequest[]): Promis
  * Delete a single booking from Supabase
  */
 export const deleteBookingFromSupabase = async (bookingId: string): Promise<boolean> => {
-  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
