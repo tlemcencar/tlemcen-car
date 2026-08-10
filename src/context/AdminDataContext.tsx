@@ -15,11 +15,12 @@ import {
 
 interface AdminDataContextType {
   cars: Car[];
-  addCar: (carData: Omit<Car, 'id'>) => Car;
-  updateCar: (id: string, carData: Partial<Car>) => void;
-  deleteCar: (id: string) => void;
-  duplicateCar: (id: string) => void;
-  toggleCarStatus: (id: string, newAvailable: boolean, nextDate?: string) => void;
+  addCar: (carData: Omit<Car, 'id'>) => Promise<{ success: boolean; car?: Car; error?: string }>;
+  updateCar: (id: string, carData: Partial<Car>) => Promise<{ success: boolean; error?: string }>;
+  deleteCar: (id: string) => Promise<{ success: boolean; error?: string }>;
+  duplicateCar: (id: string) => Promise<{ success: boolean; error?: string }>;
+  toggleCarStatus: (id: string, newAvailable: boolean, nextDate?: string) => Promise<{ success: boolean; error?: string }>;
+  reloadCarsFromSupabase: () => Promise<Car[]>;
   
   settings: AgencySettings;
   updateSettings: (newSettings: AgencySettings) => void;
@@ -284,72 +285,115 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Car CRUD Operations
-  const addCar = (carData: Omit<Car, 'id'>): Car => {
-    const newId = carData.brand.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
+  // Reload cars directly from Supabase to confirm persistence
+  const reloadCarsFromSupabase = async (): Promise<Car[]> => {
+    const res = await carService.fetchCars();
+    if (res.error) {
+      console.error('Erreur lors du rechargement Supabase:', res.error);
+      showToast('error', 'Erreur de rechargement Supabase', res.error);
+      return cars;
+    }
+    if (res.cars && Array.isArray(res.cars)) {
+      const formattedCars = res.cars.map((c) => ({
+        ...c,
+        reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
+      }));
+      setCars(formattedCars);
+      carService.setCarsCache(formattedCars);
+      return formattedCars;
+    }
+    return cars;
+  };
+
+  // Car CRUD Operations with mandatory Supabase verification
+  const addCar = async (carData: Omit<Car, 'id'>): Promise<{ success: boolean; car?: Car; error?: string }> => {
+    const newId = (carData.brand || 'car').toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
     const newCar: Car = {
       ...carData,
       id: newId,
+      carId: carData.carId || newId,
       reservationUrl: carData.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(carData.carId || newId)}&embed=true&theme=emerald`
     };
-    const updated = [newCar, ...cars];
-    setCars(updated);
-    saveCarsToServer(updated);
-    showToast('success', 'Véhicule ajouté !', `${newCar.name} a été créé avec succès.`);
-    return newCar;
+
+    // 1. Save directly to Supabase with INSERT
+    const saveRes = await carService.saveCar(newCar, false);
+
+    if (!saveRes.success) {
+      console.error('Erreur Supabase INSERT voiture:', saveRes.error);
+      showToast('error', 'Erreur de sauvegarde Supabase', saveRes.error || 'Échec de l\'insertion Supabase');
+      return { success: false, error: saveRes.error };
+    }
+
+    // 2. Reload data from Supabase to confirm
+    await reloadCarsFromSupabase();
+
+    // 3. Show success message after confirmation
+    showToast('success', 'Enregistré avec succès', `${newCar.name} a été enregistré dans Supabase.`);
+    return { success: true, car: newCar };
   };
 
-  const updateCar = (id: string, carData: Partial<Car>) => {
-    const updated = cars.map((c) => (c.id === id ? { ...c, ...carData } : c));
-    setCars(updated);
-    saveCarsToServer(updated);
-    showToast('success', 'Modifications enregistrées', `La fiche du véhicule a été mise à jour.`);
+  const updateCar = async (id: string, carData: Partial<Car>): Promise<{ success: boolean; error?: string }> => {
+    const existing = cars.find((c) => c.id === id);
+    const updatedCar: Car = {
+      ...(existing || {} as Car),
+      ...carData,
+      id, // Preserve exact ID
+    };
+
+    // 1. Save directly to Supabase with UPDATE
+    const saveRes = await carService.saveCar(updatedCar, true);
+
+    if (!saveRes.success) {
+      console.error(`Erreur Supabase UPDATE voiture ${id}:`, saveRes.error);
+      showToast('error', 'Erreur de sauvegarde Supabase', saveRes.error || 'Échec de la mise à jour Supabase');
+      return { success: false, error: saveRes.error };
+    }
+
+    // 2. Reload data from Supabase to confirm write
+    await reloadCarsFromSupabase();
+
+    // 3. Show success message after confirmation
+    showToast('success', 'Enregistré avec succès', `La modification de "${updatedCar.name}" a été enregistrée dans Supabase.`);
+    return { success: true };
   };
 
-  const deleteCar = (id: string) => {
+  const deleteCar = async (id: string): Promise<{ success: boolean; error?: string }> => {
     const carToDelete = cars.find((c) => c.id === id);
-    const updated = cars.filter((c) => c.id !== id);
-    setCars(updated);
-    deleteCarFromSupabase(id);
-    saveCarsToServer(updated);
-    showToast('info', 'Véhicule supprimé', `${carToDelete?.name || 'Le véhicule'} a été retiré de la flotte.`);
+    const res = await carService.deleteCar(id);
+
+    if (!res.success) {
+      console.error(`Erreur Supabase DELETE voiture ${id}:`, res.error);
+      showToast('error', 'Erreur de suppression Supabase', res.error || 'Échec de la suppression Supabase');
+      return { success: false, error: res.error };
+    }
+
+    // Reload data from Supabase to confirm deletion
+    await reloadCarsFromSupabase();
+
+    showToast('info', 'Enregistré avec succès', `${carToDelete?.name || 'Le véhicule'} a été supprimé de Supabase.`);
+    return { success: true };
   };
 
-  const duplicateCar = (id: string) => {
+  const duplicateCar = async (id: string): Promise<{ success: boolean; error?: string }> => {
     const target = cars.find((c) => c.id === id);
-    if (!target) return;
+    if (!target) return { success: false, error: 'Véhicule non trouvé' };
 
     const newId = target.id + '-copy-' + Date.now().toString().slice(-4);
-    const copy: Car = {
+    const copyData: Omit<Car, 'id'> = {
       ...target,
-      id: newId,
+      carId: newId,
       name: `${target.name} (Copie)`,
       featured: false,
     };
-    const updated = [copy, ...cars];
-    setCars(updated);
-    saveCarsToServer(updated);
-    showToast('success', 'Véhicule dupliqué !', `Une copie de "${target.name}" a été créée.`);
+
+    return await addCar(copyData);
   };
 
-  const toggleCarStatus = (id: string, newAvailable: boolean, nextDate?: string) => {
-    const updated = cars.map((c) => {
-      if (c.id === id) {
-        return {
-          ...c,
-          available: newAvailable,
-          nextAvailableDate: newAvailable ? undefined : (nextDate || 'Demain à 14:00'),
-        };
-      }
-      return c;
+  const toggleCarStatus = async (id: string, newAvailable: boolean, nextDate?: string): Promise<{ success: boolean; error?: string }> => {
+    return await updateCar(id, {
+      available: newAvailable,
+      nextAvailableDate: newAvailable ? undefined : (nextDate || 'Demain à 14:00'),
     });
-    setCars(updated);
-    saveCarsToServer(updated);
-    showToast(
-      newAvailable ? 'success' : 'warning',
-      newAvailable ? 'Véhicule Activé' : 'Véhicule Loué / Réservé',
-      newAvailable ? 'Le véhicule est à nouveau disponible à la réservation.' : 'Le statut a été passé en indisponible.'
-    );
   };
 
   // Settings operations
@@ -390,6 +434,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         deleteCar,
         duplicateCar,
         toggleCarStatus,
+        reloadCarsFromSupabase,
         settings,
         updateSettings,
         bookings,

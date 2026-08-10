@@ -1,5 +1,10 @@
 import { CARS_DATA } from '../data/carsData';
 import { Car } from '../types';
+import {
+  fetchCarsFromSupabase,
+  saveCarToSupabase,
+  deleteCarFromSupabase,
+} from '../lib/supabase';
 
 export interface FilterOptions {
   category?: string;
@@ -28,6 +33,25 @@ export const carService = {
 
   getAllCars(): Car[] {
     return getStoredCars();
+  },
+
+  async fetchCars(): Promise<{ cars: Car[] | null; error?: string }> {
+    const res = await fetchCarsFromSupabase();
+    if (res.cars) {
+      carsCache = res.cars;
+    }
+    return res;
+  },
+
+  async saveCar(
+    car: Car,
+    isExisting?: boolean
+  ): Promise<{ success: boolean; error?: string }> {
+    return await saveCarToSupabase(car, isExisting);
+  },
+
+  async deleteCar(carId: string): Promise<{ success: boolean; error?: string }> {
+    return await deleteCarFromSupabase(carId);
   },
 
   getFeaturedCars(): Car[] {

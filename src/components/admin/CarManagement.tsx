@@ -24,7 +24,8 @@ import {
   Clock,
   Layers,
   Image as ImageIcon,
-  Calendar
+  Calendar,
+  RefreshCw
 } from 'lucide-react';
 
 interface CarManagementProps {
@@ -36,13 +37,23 @@ export const CarManagement: React.FC<CarManagementProps> = ({
   onOpenAddModal,
   onOpenEditModal,
 }) => {
-  const { cars, deleteCar, duplicateCar, toggleCarStatus } = useAdminData();
+  const { cars, deleteCar, duplicateCar, toggleCarStatus, reloadCarsFromSupabase } = useAdminData();
   const { currency } = useCurrency();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('Toutes');
   const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'rented'>('all');
   const [deleteModalCar, setDeleteModalCar] = useState<Car | null>(null);
+  const [isReloading, setIsReloading] = useState(false);
+
+  const handleReload = async () => {
+    setIsReloading(true);
+    try {
+      await reloadCarsFromSupabase();
+    } finally {
+      setIsReloading(false);
+    }
+  };
 
   // Filter cars based on search and filters
   const filteredCars = cars.filter((car) => {
@@ -79,13 +90,25 @@ export const CarManagement: React.FC<CarManagementProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenAddModal}
-          className="px-5 py-3 bg-gradient-to-r from-[#ff2e4d] to-[#d60029] hover:from-[#e60026] hover:to-[#b30020] text-white font-bold text-xs rounded-xl shadow-[0_0_20px_rgba(255,46,77,0.4)] flex items-center space-x-2 transition-all hover:scale-105"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Ajouter un Véhicule</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleReload}
+            disabled={isReloading}
+            className="px-4 py-3 bg-[#181824] hover:bg-[#222232] text-gray-200 font-semibold text-xs rounded-xl border border-white/10 flex items-center space-x-2 transition-all disabled:opacity-50"
+            title="Recharger la liste depuis Supabase"
+          >
+            <RefreshCw className={`w-4 h-4 text-emerald-400 ${isReloading ? 'animate-spin' : ''}`} />
+            <span>Recharger Supabase</span>
+          </button>
+
+          <button
+            onClick={onOpenAddModal}
+            className="px-5 py-3 bg-gradient-to-r from-[#ff2e4d] to-[#d60029] hover:from-[#e60026] hover:to-[#b30020] text-white font-bold text-xs rounded-xl shadow-[0_0_20px_rgba(255,46,77,0.4)] flex items-center space-x-2 transition-all hover:scale-105"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Ajouter un Véhicule</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -313,10 +336,11 @@ export const CarManagement: React.FC<CarManagementProps> = ({
         confirmLabel="Oui, Supprimer"
         cancelLabel="Annuler"
         isDangerous={true}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteModalCar) {
-            deleteCar(deleteModalCar.id);
+            const targetId = deleteModalCar.id;
             setDeleteModalCar(null);
+            await deleteCar(targetId);
           }
         }}
         onCancel={() => setDeleteModalCar(null)}

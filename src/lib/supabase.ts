@@ -69,45 +69,70 @@ CREATE TABLE IF NOT EXISTS public.cars (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- 3. Enable Row Level Security (RLS)
+-- 3. Table: bookings
+CREATE TABLE IF NOT EXISTS public.bookings (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- 4. Enable Row Level Security (RLS)
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cars ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 
--- 4. Grant full table permissions to anon and authenticated roles
+-- 5. Grant full table permissions to anon, authenticated, and service_role
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON public.app_settings TO anon, authenticated, service_role;
 GRANT ALL ON public.cars TO anon, authenticated, service_role;
+GRANT ALL ON public.bookings TO anon, authenticated, service_role;
 
--- 5. Policies for app_settings
+-- 6. Policies for app_settings
 DROP POLICY IF EXISTS "Allow public access to app_settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Allow public read app_settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Allow authenticated insert app_settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Allow authenticated update app_settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Allow authenticated delete app_settings" ON public.app_settings;
 CREATE POLICY "Allow public access to app_settings" ON public.app_settings 
   FOR ALL USING (true) WITH CHECK (true);
 
--- 6. Policies for cars
+-- 7. Policies for cars
 DROP POLICY IF EXISTS "Allow public access to cars" ON public.cars;
+DROP POLICY IF EXISTS "Allow public read cars" ON public.cars;
+DROP POLICY IF EXISTS "Allow authenticated insert cars" ON public.cars;
+DROP POLICY IF EXISTS "Allow authenticated update cars" ON public.cars;
+DROP POLICY IF EXISTS "Allow authenticated delete cars" ON public.cars;
 CREATE POLICY "Allow public access to cars" ON public.cars 
   FOR ALL USING (true) WITH CHECK (true);
 
--- 7. Storage Bucket "cars" for vehicle & agency images
+-- 8. Policies for bookings
+DROP POLICY IF EXISTS "Allow public access to bookings" ON public.bookings;
+CREATE POLICY "Allow public access to bookings" ON public.bookings 
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- 9. Storage Bucket "cars" for vehicle & agency images
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('cars', 'cars', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
 
--- 8. RLS Policies for Storage Objects in "cars" bucket
+-- 10. RLS Policies for Storage Objects in "cars" bucket
 DROP POLICY IF EXISTS "Public Read Access for cars bucket" ON storage.objects;
 CREATE POLICY "Public Read Access for cars bucket" ON storage.objects
   FOR SELECT USING (bucket_id = 'cars');
 
 DROP POLICY IF EXISTS "Public Insert Access for cars bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Insert for cars bucket" ON storage.objects;
 CREATE POLICY "Public Insert Access for cars bucket" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'cars');
 
 DROP POLICY IF EXISTS "Public Update Access for cars bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Update for cars bucket" ON storage.objects;
 CREATE POLICY "Public Update Access for cars bucket" ON storage.objects
   FOR UPDATE USING (bucket_id = 'cars') WITH CHECK (bucket_id = 'cars');
 
 DROP POLICY IF EXISTS "Public Delete Access for cars bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Delete for cars bucket" ON storage.objects;
 CREATE POLICY "Public Delete Access for cars bucket" ON storage.objects
   FOR DELETE USING (bucket_id = 'cars');
 `;
@@ -220,7 +245,139 @@ export const saveSettingsToSupabase = async (settings: AgencySettings): Promise<
 };
 
 /**
- * Save cars list to Supabase
+ * Fetch cars list directly from Supabase table public.cars
+ */
+export const fetchCarsFromSupabase = async (): Promise<{ cars: Car[] | null; error?: string }> => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { cars: null, error: 'Client Supabase non configuré (URL ou Clé manquante)' };
+  }
+
+  try {
+    const { data, error } = await supabase.from('cars').select('*').order('updated_at', { ascending: false });
+
+    if (error) {
+      const errMsg = error.message || error.details || String(error);
+      console.error('Erreur Supabase fetch cars:', error);
+      return { cars: null, error: errMsg };
+    }
+
+    if (data && Array.isArray(data)) {
+      const carsList = data.map((row: any) => {
+        if (row.data) {
+          return {
+            ...row.data,
+            id: row.id || row.data.id,
+            carId: row.data.carId || row.id || row.data.id,
+          };
+        }
+        return row;
+      }) as Car[];
+      return { cars: carsList };
+    }
+
+    return { cars: [] };
+  } catch (err: any) {
+    const errMsg = err?.message || String(err);
+    console.error('Exception Supabase fetch cars:', err);
+    return { cars: null, error: errMsg };
+  }
+};
+
+/**
+ * Save a single car to Supabase (UPDATE if existing, INSERT if new)
+ */
+export const saveCarToSupabase = async (
+  car: Car,
+  isExisting?: boolean
+): Promise<{ success: boolean; error?: string }> => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { success: false, error: 'Client Supabase non initialisé (vérifiez SUPABASE_URL et SUPABASE_ANON_KEY)' };
+  }
+
+  try {
+    const carId = car.id || car.carId || `car-${Date.now()}`;
+    const carToStore: Car = {
+      ...car,
+      id: carId,
+      carId: car.carId || carId,
+    };
+
+    const updated_at = new Date().toISOString();
+
+    // 1. If explicit UPDATE for existing car
+    if (isExisting) {
+      const { data: updateData, error: updateError } = await supabase
+        .from('cars')
+        .update({
+          data: carToStore,
+          updated_at,
+        })
+        .eq('id', carId)
+        .select();
+
+      if (updateError) {
+        const errMsg = updateError.message || updateError.details || String(updateError);
+        console.error(`Erreur Supabase UPDATE car ${carId}:`, updateError);
+        return { success: false, error: errMsg };
+      }
+
+      // If update matched 0 rows, fallback to upsert
+      if (!updateData || updateData.length === 0) {
+        const { error: upsertErr } = await supabase
+          .from('cars')
+          .upsert({ id: carId, data: carToStore, updated_at }, { onConflict: 'id' });
+
+        if (upsertErr) {
+          const errMsg = upsertErr.message || upsertErr.details || String(upsertErr);
+          console.error(`Erreur Supabase UPSERT fallback car ${carId}:`, upsertErr);
+          return { success: false, error: errMsg };
+        }
+      }
+
+      return { success: true };
+    }
+
+    // 2. Otherwise INSERT for new car
+    const { error: insertError } = await supabase.from('cars').insert([
+      {
+        id: carId,
+        data: carToStore,
+        updated_at,
+      },
+    ]);
+
+    if (insertError) {
+      // If error is duplicate key, try upsert
+      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
+        const { error: upsertError } = await supabase
+          .from('cars')
+          .upsert({ id: carId, data: carToStore, updated_at }, { onConflict: 'id' });
+
+        if (upsertError) {
+          const errMsg = upsertError.message || upsertError.details || String(upsertError);
+          console.error(`Erreur Supabase UPSERT car ${carId}:`, upsertError);
+          return { success: false, error: errMsg };
+        }
+        return { success: true };
+      }
+
+      const errMsg = insertError.message || insertError.details || String(insertError);
+      console.error(`Erreur Supabase INSERT car ${carId}:`, insertError);
+      return { success: false, error: errMsg };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    const errMsg = err?.message || String(err);
+    console.error('Exception Supabase save car:', err);
+    return { success: false, error: errMsg };
+  }
+};
+
+/**
+ * Save cars list to Supabase (bulk helper)
  */
 export const saveCarsToSupabase = async (cars: Car[]): Promise<boolean> => {
   const supabase = getSupabaseClient();
@@ -279,24 +436,26 @@ export const saveCarsToSupabase = async (cars: Car[]): Promise<boolean> => {
 /**
  * Delete a single car from Supabase
  */
-export const deleteCarFromSupabase = async (carId: string): Promise<boolean> => {
+export const deleteCarFromSupabase = async (
+  carId: string
+): Promise<{ success: boolean; error?: string }> => {
   const supabase = getSupabaseClient();
-  if (!supabase) return false;
+  if (!supabase) {
+    return { success: false, error: 'Client Supabase non initialisé.' };
+  }
 
   try {
     const { error } = await supabase.from('cars').delete().eq('id', carId);
     if (error) {
-      if (!isTableMissingError(error)) {
-        console.error('Error deleting car from Supabase:', error.message || error);
-      }
-      return false;
+      const errMsg = error.message || error.details || String(error);
+      console.error(`Erreur Supabase DELETE car ${carId}:`, error);
+      return { success: false, error: errMsg };
     }
-    return true;
+    return { success: true };
   } catch (err: any) {
-    if (!isTableMissingError(err)) {
-      console.error('Exception deleting car from Supabase:', err?.message || err);
-    }
-    return false;
+    const errMsg = err?.message || String(err);
+    console.error('Exception Supabase delete car:', err);
+    return { success: false, error: errMsg };
   }
 };
 

@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Car } from '../../types';
 import { ImageManager } from './ImageManager';
-import { X, Check, Plus, Trash2, Car as CarIcon, Sparkles, Shield, Fuel, Gauge, Users, DollarSign, Calendar } from 'lucide-react';
+import { X, Check, Plus, Trash2, Car as CarIcon, Sparkles, Shield, Fuel, Gauge, Users, DollarSign, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 
 interface CarFormModalProps {
   isOpen: boolean;
   car: Car | null; // null means adding a new car
-  onSave: (carData: Omit<Car, 'id'> | Partial<Car>) => void;
+  onSave: (carData: Omit<Car, 'id'> | Partial<Car>) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -47,8 +47,13 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
 
   const [newFeatureInput, setNewFeatureInput] = useState('');
   const [activeTab, setActiveTab] = useState<'general' | 'pricing' | 'status' | 'features' | 'images'>('general');
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsSaving(false);
+    setErrorMessage(null);
+
     if (car) {
       const defaultResUrl = car.reservationUrl || (car.carId || car.id ? `https://tlemcen-car.onrender.com/?carId=${car.carId || car.id}&embed=true&theme=emerald` : '');
       setFormData({
@@ -93,21 +98,36 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.brand) return;
+    if (!formData.name || !formData.brand || isSaving) return;
+
+    setIsSaving(true);
+    setErrorMessage(null);
 
     const effectiveCarId = formData.carId || (formData as Car).id || 'car-' + Date.now();
     const effectiveReservationUrl = formData.reservationUrl && formData.reservationUrl.trim().length > 0
       ? formData.reservationUrl.trim()
       : `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(effectiveCarId)}&embed=true&theme=emerald`;
 
-    onSave({
-      ...formData,
-      carId: effectiveCarId,
-      reservationUrl: effectiveReservationUrl,
-    } as Omit<Car, 'id'>);
-    onClose();
+    try {
+      const success = await onSave({
+        ...formData,
+        carId: effectiveCarId,
+        reservationUrl: effectiveReservationUrl,
+      } as Omit<Car, 'id'>);
+
+      if (success) {
+        onClose();
+      } else {
+        setErrorMessage("L'enregistrement dans Supabase a échoué. Veuillez vérifier la console ou l'état de Supabase.");
+      }
+    } catch (err: any) {
+      console.error("Erreur handleSubmit car modal:", err);
+      setErrorMessage(err?.message || "Erreur de sauvegarde dans Supabase.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleAddFeature = () => {
@@ -582,22 +602,41 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
               />
             )}
 
+            {/* Error Message Alert */}
+            {errorMessage && (
+              <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl flex items-center space-x-2 text-red-200 text-xs">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
             {/* Modal Footer Controls */}
             <div className="pt-4 border-t border-white/10 flex justify-between items-center bg-[#0a0a0f] p-4 rounded-xl">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 bg-[#1a1a24] hover:bg-[#232332] text-gray-300 font-semibold text-xs rounded-xl border border-white/10"
+                disabled={isSaving}
+                className="px-5 py-2.5 bg-[#1a1a24] hover:bg-[#232332] text-gray-300 font-semibold text-xs rounded-xl border border-white/10 disabled:opacity-50"
               >
                 Annuler
               </button>
 
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-[#ff2e4d] hover:bg-[#e60026] text-white font-bold text-xs rounded-xl shadow-[0_0_20px_rgba(255,46,77,0.4)] flex items-center space-x-2"
+                disabled={isSaving}
+                className="px-6 py-2.5 bg-[#ff2e4d] hover:bg-[#e60026] disabled:bg-gray-700 text-white font-bold text-xs rounded-xl shadow-[0_0_20px_rgba(255,46,77,0.4)] flex items-center space-x-2 transition-all"
               >
-                <Check className="w-4 h-4" />
-                <span>{car ? 'Enregistrer les Modifications' : 'Créer le Véhicule'}</span>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Enregistrement dans Supabase...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>{car ? 'Enregistrer les Modifications dans Supabase' : 'Créer le Véhicule dans Supabase'}</span>
+                  </>
+                )}
               </button>
             </div>
           </form>
