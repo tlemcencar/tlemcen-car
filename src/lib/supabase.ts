@@ -14,6 +14,49 @@ let runtimeSupabaseKey: string =
   '';
 
 let supabaseInstance: SupabaseClient | null = null;
+let configFetchPromise: Promise<boolean> | null = null;
+
+export const ensureSupabaseConfigured = async (): Promise<boolean> => {
+  if (runtimeSupabaseUrl && runtimeSupabaseKey) {
+    if (!supabaseInstance) {
+      try {
+        supabaseInstance = createClient(runtimeSupabaseUrl, runtimeSupabaseKey);
+      } catch (err) {
+        console.error('Failed to create Supabase client:', err);
+      }
+    }
+    return Boolean(supabaseInstance);
+  }
+
+  if (configFetchPromise) {
+    return configFetchPromise;
+  }
+
+  configFetchPromise = (async () => {
+    try {
+      if (typeof window !== 'undefined' && typeof fetch === 'function') {
+        const res = await fetch('/api/supabase-config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url && data.key) {
+            setSupabaseCredentials(data.url, data.key);
+            return true;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Impossible de récupérer la config Supabase via /api/supabase-config:', err);
+    }
+    return false;
+  })();
+
+  return configFetchPromise;
+};
+
+// Auto-trigger config check on client side
+if (typeof window !== 'undefined') {
+  ensureSupabaseConfigured().catch(() => {});
+}
 
 export const setSupabaseCredentials = (url: string, key: string) => {
   if (url && key) {
@@ -165,6 +208,7 @@ export const fetchFromSupabase = async (): Promise<{
   cars: Car[] | null;
   bookings: BookingRequest[] | null;
 }> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { settings: null, cars: null, bookings: null };
@@ -212,6 +256,7 @@ export const fetchFromSupabase = async (): Promise<{
  * Save settings to Supabase
  */
 export const saveSettingsToSupabase = async (settings: AgencySettings): Promise<boolean> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
@@ -248,6 +293,7 @@ export const saveSettingsToSupabase = async (settings: AgencySettings): Promise<
  * Fetch cars list directly from Supabase table public.cars
  */
 export const fetchCarsFromSupabase = async (): Promise<{ cars: Car[] | null; error?: string }> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { cars: null, error: 'Client Supabase non configuré (URL ou Clé manquante)' };
@@ -291,6 +337,7 @@ export const saveCarToSupabase = async (
   car: Car,
   isExisting?: boolean
 ): Promise<{ success: boolean; error?: string }> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { success: false, error: 'Client Supabase non initialisé (vérifiez SUPABASE_URL et SUPABASE_ANON_KEY)' };
@@ -380,6 +427,7 @@ export const saveCarToSupabase = async (
  * Save cars list to Supabase (bulk helper)
  */
 export const saveCarsToSupabase = async (cars: Car[]): Promise<boolean> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
@@ -439,6 +487,7 @@ export const saveCarsToSupabase = async (cars: Car[]): Promise<boolean> => {
 export const deleteCarFromSupabase = async (
   carId: string
 ): Promise<{ success: boolean; error?: string }> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { success: false, error: 'Client Supabase non initialisé.' };
@@ -463,6 +512,7 @@ export const deleteCarFromSupabase = async (
  * Save bookings list to Supabase
  */
 export const saveBookingsToSupabase = async (bookings: BookingRequest[]): Promise<boolean> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
@@ -517,6 +567,7 @@ export const saveBookingsToSupabase = async (bookings: BookingRequest[]): Promis
  * Delete a single booking from Supabase
  */
 export const deleteBookingFromSupabase = async (bookingId: string): Promise<boolean> => {
+  await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 

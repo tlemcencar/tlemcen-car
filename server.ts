@@ -506,6 +506,13 @@ async function startServer() {
     res.json({ status: 'ok' });
   });
 
+  // Supabase runtime config route for client-side auto-initialization
+  app.get('/api/supabase-config', (req, res) => {
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+    const key = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+    res.json({ url, key });
+  });
+
   // Serveur Vite en dev / Fichiers statiques dist en prod
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
