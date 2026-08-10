@@ -335,7 +335,7 @@ export const fetchCarsFromSupabase = async (): Promise<{ cars: Car[] | null; err
  */
 export const saveCarToSupabase = async (
   car: Car,
-  isExisting?: boolean
+  _isExisting?: boolean
 ): Promise<{ success: boolean; error?: string }> => {
   await ensureSupabaseConfigured();
   const supabase = getSupabaseClient();
@@ -353,65 +353,21 @@ export const saveCarToSupabase = async (
 
     const updated_at = new Date().toISOString();
 
-    // 1. If explicit UPDATE for existing car
-    if (isExisting) {
-      const { data: updateData, error: updateError } = await supabase
-        .from('cars')
-        .update({
+    // Directly upsert row in public.cars table (creates if new, updates if exists)
+    const { error } = await supabase
+      .from('cars')
+      .upsert(
+        {
+          id: carId,
           data: carToStore,
           updated_at,
-        })
-        .eq('id', carId)
-        .select();
+        },
+        { onConflict: 'id' }
+      );
 
-      if (updateError) {
-        const errMsg = updateError.message || updateError.details || String(updateError);
-        console.error(`Erreur Supabase UPDATE car ${carId}:`, updateError);
-        return { success: false, error: errMsg };
-      }
-
-      // If update matched 0 rows, fallback to upsert
-      if (!updateData || updateData.length === 0) {
-        const { error: upsertErr } = await supabase
-          .from('cars')
-          .upsert({ id: carId, data: carToStore, updated_at }, { onConflict: 'id' });
-
-        if (upsertErr) {
-          const errMsg = upsertErr.message || upsertErr.details || String(upsertErr);
-          console.error(`Erreur Supabase UPSERT fallback car ${carId}:`, upsertErr);
-          return { success: false, error: errMsg };
-        }
-      }
-
-      return { success: true };
-    }
-
-    // 2. Otherwise INSERT for new car
-    const { error: insertError } = await supabase.from('cars').insert([
-      {
-        id: carId,
-        data: carToStore,
-        updated_at,
-      },
-    ]);
-
-    if (insertError) {
-      // If error is duplicate key, try upsert
-      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
-        const { error: upsertError } = await supabase
-          .from('cars')
-          .upsert({ id: carId, data: carToStore, updated_at }, { onConflict: 'id' });
-
-        if (upsertError) {
-          const errMsg = upsertError.message || upsertError.details || String(upsertError);
-          console.error(`Erreur Supabase UPSERT car ${carId}:`, upsertError);
-          return { success: false, error: errMsg };
-        }
-        return { success: true };
-      }
-
-      const errMsg = insertError.message || insertError.details || String(insertError);
-      console.error(`Erreur Supabase INSERT car ${carId}:`, insertError);
+    if (error) {
+      const errMsg = error.message || error.details || error.hint || JSON.stringify(error);
+      console.error(`Erreur Supabase UPSERT car ${carId}:`, error);
       return { success: false, error: errMsg };
     }
 

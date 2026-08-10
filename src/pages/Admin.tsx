@@ -34,13 +34,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateToClient }) => {
     setIsCarModalOpen(true);
   };
 
-  const handleSaveCar = async (carData: Omit<Car, 'id'> | Partial<Car>): Promise<boolean> => {
+  const handleSaveCar = async (carData: Omit<Car, 'id'> | Partial<Car>): Promise<{ success: boolean; error?: string }> => {
     if (editingCar) {
-      const res = await updateCar(editingCar.id, carData);
-      return res.success;
+      return await updateCar(editingCar.id, carData);
     } else {
       const res = await addCar(carData as Omit<Car, 'id'>);
-      return res.success;
+      return { success: res.success, error: res.error };
     }
   };
 
