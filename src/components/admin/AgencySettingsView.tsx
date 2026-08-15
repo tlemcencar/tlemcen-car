@@ -411,10 +411,25 @@ export const AgencySettingsView: React.FC = () => {
                     {diagnosticResult.storageBucketCars.exists ? (
                       <span className="text-emerald-400 font-bold text-[11px]">✓ Actif</span>
                     ) : (
-                      <span className="text-amber-400 font-bold text-[11px]">Non détecté</span>
+                      <span className="text-amber-400 font-bold text-[11px]" title="Optionnel : pour héberger des fichiers images uploadés sur Supabase">
+                        Optionnel (Non créé)
+                      </span>
                     )}
                   </div>
                 </div>
+
+                {!diagnosticResult.storageBucketCars.exists && (
+                  <div className="bg-[#0e0e14]/90 p-3 rounded-lg border border-amber-500/20 text-[11px] text-gray-300 flex items-start space-x-2.5">
+                    <HelpCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-amber-300 font-bold mb-0.5">Note sur le "Storage cars" (Optionnel) :</p>
+                      <p className="text-gray-300 leading-relaxed">
+                        Votre base de données (12 véhicules, réservations, paramètres) est <strong>100% opérationnelle</strong> avec les URLs photos existantes.
+                        Si vous souhaitez aussi pouvoir téléverser des fichiers photos directement sur Supabase, allez dans <a href="https://supabase.com/dashboard/project/_/storage/buckets" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline inline-flex items-center font-semibold">Storage &gt; New Bucket <ExternalLink className="w-2.5 h-2.5 ml-0.5" /></a>, nommez-le <code className="text-emerald-300">cars</code> et cochez <strong>"Public bucket"</strong>.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {diagnosticResult.suggestedAction && (
                   <div className="bg-[#0e0e14]/80 p-3 rounded-lg border border-white/10 text-[11px] text-gray-300 flex items-start space-x-2">

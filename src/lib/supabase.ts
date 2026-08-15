@@ -763,15 +763,23 @@ export const testSupabaseConnectionDetailed = async (
       result.bookingsTable.error = e?.message;
     }
 
-    // 4. Test storage bucket
+    // 4. Test storage bucket "cars"
     try {
-      const { data: bucketData, error: bucketError } = await client.storage.getBucket('cars');
-      if (!bucketError && bucketData) {
+      // Test 1: Check listing files in bucket (works with public anon key)
+      const { error: listError } = await client.storage.from('cars').list('', { limit: 1 });
+      if (!listError) {
         result.storageBucketCars.exists = true;
         result.storageBucketCars.accessible = true;
       } else {
-        result.storageBucketCars.exists = false;
-        result.storageBucketCars.error = bucketError?.message;
+        // Test 2: Check getBucket
+        const { data: bucketData, error: bucketError } = await client.storage.getBucket('cars');
+        if (!bucketError && bucketData) {
+          result.storageBucketCars.exists = true;
+          result.storageBucketCars.accessible = true;
+        } else {
+          result.storageBucketCars.exists = false;
+          result.storageBucketCars.error = listError?.message || bucketError?.message;
+        }
       }
     } catch (e: any) {
       result.storageBucketCars.error = e?.message;
@@ -1250,5 +1258,37 @@ export const deleteBookingFromSupabase = async (bookingId: string): Promise<bool
   } catch (err: any) {
     console.error('Exception deleting booking from Supabase:', err?.message || err);
     return false;
+  }
+};
+
+/**
+ * Upload a car photo or logo to Supabase Storage bucket 'cars'
+ */
+export const uploadImageToSupabaseStorage = async (
+  file: File | Blob,
+  folder: string = 'cars'
+): Promise<{ url: string | null; error?: string }> => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { url: null, error: 'Client Supabase non initialisé.' };
+  }
+
+  try {
+    const fileExt = file instanceof File ? file.name.split('.').pop() : 'jpg';
+    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt || 'jpg'}`;
+
+    const { data, error } = await supabase.storage.from('cars').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: true,
+    });
+
+    if (error) {
+      return { url: null, error: error.message };
+    }
+
+    const { data: publicUrlData } = supabase.storage.from('cars').getPublicUrl(data.path);
+    return { url: publicUrlData.publicUrl };
+  } catch (err: any) {
+    return { url: null, error: err?.message || String(err) };
   }
 };
