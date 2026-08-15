@@ -558,7 +558,7 @@ VALUES (
       "Sièges Baquets CUPBucket en cuir bleu",
       "Digital Cockpit personnalisable",
       "Freins Akebono 6 pistons",
-      "Jantes alliage 20\" Copper"
+      "Jantes alliage 20 pouces Copper"
     ],
     "description": "SUV coupé au caractère affirmé et au look ravageur. Le Formentor VZ5 allie un design agressif et un confort irréprochable pour tous vos trajets à Tlemcen.",
     "rating": 4.88,
@@ -646,7 +646,7 @@ VALUES (
     "features": [
       "Pack Sport N-Line extérieur & intérieur",
       "Climatisation tri-zone automatique",
-      "Double écran panoramique 10.25\"",
+      "Double écran panoramique 10.25 pouces",
       "Hayon mains libres électrique",
       "Régulateur adaptatif intelligent"
     ],
