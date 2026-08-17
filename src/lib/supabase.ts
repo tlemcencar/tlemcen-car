@@ -34,16 +34,19 @@ export const normalizeSupabaseKey = (rawKey: string): string => {
   return rawKey.trim();
 };
 
-// Runtime configuration cache for Supabase credentials
+// Runtime configuration cache for Supabase credentials with fallback to default project
+const DEFAULT_SUPABASE_URL = 'https://mivurvqfdtfkjrrppmlk.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'sb_publishable_gKZP7qEg7kP54KsG7-ZwUw_ailQjY-H';
+
 let runtimeSupabaseUrl: string =
   (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.VITE_SUPABASE_URL || import.meta.env.SUPABASE_URL)) ||
   (typeof process !== 'undefined' && process.env && (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)) ||
-  '';
+  DEFAULT_SUPABASE_URL;
 
 let runtimeSupabaseKey: string =
   (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY)) ||
   (typeof process !== 'undefined' && process.env && (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)) ||
-  '';
+  DEFAULT_SUPABASE_KEY;
 
 // Attempt restoring from localStorage if empty
 if ((!runtimeSupabaseUrl || !runtimeSupabaseKey) && typeof window !== 'undefined' && window.localStorage) {
@@ -785,10 +788,24 @@ export const testSupabaseConnectionDetailed = async (
       result.storageBucketCars.error = e?.message;
     }
 
+    const isNetworkOrFetchError = (err?: string) =>
+      Boolean(err && (err.includes('Failed to fetch') || err.includes('NetworkError') || err.includes('fetch')));
+
+    const networkError =
+      isNetworkOrFetchError(result.appSettingsTable.error) ||
+      isNetworkOrFetchError(result.carsTable.error) ||
+      isNetworkOrFetchError(result.bookingsTable.error);
+
     const allTablesExist =
       result.appSettingsTable.exists && result.carsTable.exists && result.bookingsTable.exists;
 
-    if (allTablesExist) {
+    if (networkError) {
+      result.connected = false;
+      result.message =
+        'Impossible de joindre le serveur Supabase (TypeError: Failed to fetch).';
+      result.suggestedAction =
+        'Causes fréquentes : 1) Un bloqueur de pub ou de tracking (Brave Shields, uBlock, AdGuard) bloque supabase.co — désactivez-le sur cette page. 2) Le projet Supabase est mis en pause dans votre tableau de bord Supabase (cliquez sur "Restore"). 3) Vérifiez votre connexion internet.';
+    } else if (allTablesExist) {
       result.connected = true;
       result.message = `Connexion Supabase réussie ! Tables vérifiées (${result.carsTable.rowCount ?? 0} véhicules dans la base).`;
     } else {

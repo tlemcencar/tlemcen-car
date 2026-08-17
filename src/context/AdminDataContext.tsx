@@ -52,6 +52,10 @@ const defaultSettings: AgencySettings = {
     facebook: 'https://facebook.com/tlemcencar',
     tiktok: 'https://tiktok.com/@tlemcencar',
   },
+  supabaseConfig: {
+    url: 'https://mivurvqfdtfkjrrppmlk.supabase.co',
+    anonKey: 'sb_publishable_gKZP7qEg7kP54KsG7-ZwUw_ailQjY-H',
+  },
 };
 
 const defaultInitialBookings: BookingRequest[] = [
