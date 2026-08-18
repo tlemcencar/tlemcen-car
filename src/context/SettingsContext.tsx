@@ -45,6 +45,7 @@ export const defaultSettings: AgencySettings = {
   },
   iframes: {
     reservationEmbedUrl: 'https://tlemcen-car.onrender.com/?embed=true&theme=emerald',
+    googleAnalyticsId: 'G-YHDBE0RSEC',
   },
   general: {
     currencyDefault: 'DZD',
@@ -156,6 +157,29 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Update primary color CSS variable on document element
     if (settings.primaryColor) {
       document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+    }
+
+    // Google Analytics 4 dynamic injection
+    const gaId = settings.iframes?.googleAnalyticsId?.trim();
+    if (gaId && gaId.startsWith('G-')) {
+      const existingScript = document.getElementById('ga-gtag-script');
+      if (!existingScript) {
+        const gtagScript = document.createElement('script');
+        gtagScript.id = 'ga-gtag-script';
+        gtagScript.async = true;
+        gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+        document.head.appendChild(gtagScript);
+
+        const gtagInline = document.createElement('script');
+        gtagInline.id = 'ga-inline-script';
+        gtagInline.innerHTML = `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${gaId}', { page_path: window.location.pathname });
+        `;
+        document.head.appendChild(gtagInline);
+      }
     }
   }, [settings]);
 
