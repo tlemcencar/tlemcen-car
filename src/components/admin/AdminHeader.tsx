@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, ShieldCheck, User, Search, ExternalLink, Sparkles } from 'lucide-react';
+import { Bell, ShieldCheck, User, Search, ExternalLink, Sparkles, Lock } from 'lucide-react';
 import { AdminTab } from '../../types/admin';
 import { useAdminData } from '../../context/AdminDataContext';
 import { CurrencySelector } from '../common/CurrencySelector';
@@ -7,9 +7,10 @@ import { CurrencySelector } from '../common/CurrencySelector';
 interface AdminHeaderProps {
   activeTab: AdminTab;
   onExitAdmin: () => void;
+  onLockAdmin?: () => void;
 }
 
-export const AdminHeader: React.FC<AdminHeaderProps> = ({ activeTab, onExitAdmin }) => {
+export const AdminHeader: React.FC<AdminHeaderProps> = ({ activeTab, onExitAdmin, onLockAdmin }) => {
   const { bookings } = useAdminData();
   const pendingCount = bookings.filter((b) => b.status === 'en_attente').length;
 
@@ -70,6 +71,18 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ activeTab, onExitAdmin
             <div className="text-[9px] text-gray-400 leading-none mt-1">Super Utilisateur</div>
           </div>
         </div>
+
+        {/* Lock Admin Button */}
+        {onLockAdmin && (
+          <button
+            onClick={onLockAdmin}
+            className="p-2.5 bg-[#14141e] hover:bg-[#1f1f2e] text-gray-300 hover:text-white rounded-xl border border-white/10 flex items-center space-x-1.5 transition-colors"
+            title="Verrouiller l'espace administrateur"
+          >
+            <Lock className="w-4 h-4 text-[#ff2e4d]" />
+            <span className="hidden lg:inline text-xs font-semibold">Verrouiller</span>
+          </button>
+        )}
 
         {/* Exit Admin Button */}
         <button
