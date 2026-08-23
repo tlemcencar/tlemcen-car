@@ -4,6 +4,7 @@ import { Sparkles, ShieldCheck, MapPin, PhoneCall, Award, ArrowRight } from 'luc
 import heroCarImg from '../../assets/images/hero_luxury_car_1785318790966.jpg';
 import { QuickSearchBox } from '../booking/QuickSearchBox';
 import { AGENCY_DETAILS } from '../../utils/constants';
+import { useSettings } from '../../context/SettingsContext';
 
 interface HeroProps {
   onNavigateToFleet: () => void;
@@ -11,6 +12,8 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onNavigateToFleet, onNavigateToServices }) => {
+  const { settings } = useSettings();
+  const showQuickSearch = settings.general?.showQuickSearch !== false;
   return (
     <section className="relative min-h-screen pt-28 pb-16 flex flex-col justify-between overflow-hidden bg-[#07070a]">
       {/* Background Image with luxury vignette and darkness */}
@@ -27,8 +30,8 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToFleet, onNavigateToServi
         <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-[#ff2e4d]/10 rounded-full blur-[160px] pointer-events-none" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 w-full relative z-10 my-auto">
-        <div className="max-w-3xl space-y-6">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 w-full relative z-10 my-auto flex flex-col items-center text-center">
+        <div className="max-w-3xl space-y-6 flex flex-col items-center">
           {/* Eyebrow Badge */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -45,10 +48,10 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToFleet, onNavigateToServi
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight font-serif tracking-tight"
+            className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight font-serif tracking-tight text-center"
           >
-            Sillonnez Tlemcen avec{' '}
-            <span className="bg-gradient-to-r from-white via-[#ff667d] to-[#ff2e4d] bg-clip-text text-transparent">
+            Tlemcen-car <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-white via-[#ff667d] to-[#ff2e4d] bg-clip-text text-transparent block sm:inline">
               Prestige & Élégance
             </span>
           </motion.h1>
@@ -58,7 +61,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToFleet, onNavigateToServi
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-lg text-gray-300 font-normal leading-relaxed max-w-2xl"
+            className="text-base sm:text-lg text-gray-300 font-normal leading-relaxed max-w-2xl text-center"
           >
             Découvrez notre parc exclusif de supercars, SUVs et berlines de luxe. Prise en charge rapide à l'<strong>Aéroport Zenata - Messali Hadj</strong> et livraison sur mesure dans toute la wilaya de Tlemcen.
           </motion.p>
@@ -68,7 +71,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToFleet, onNavigateToServi
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap items-center gap-4 pt-2"
+            className="flex flex-wrap items-center justify-center gap-4 pt-2"
           >
             <button
               onClick={onNavigateToFleet}
@@ -87,15 +90,17 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToFleet, onNavigateToServi
           </motion.div>
         </div>
 
-        {/* Search Widget */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-          className="mt-12"
-        >
-          <QuickSearchBox onSearchSubmit={onNavigateToFleet} />
-        </motion.div>
+        {/* Search Widget (Can be shown or hidden from Admin) */}
+        {showQuickSearch && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="mt-12 w-full text-left"
+          >
+            <QuickSearchBox onSearchSubmit={onNavigateToFleet} />
+          </motion.div>
+        )}
       </div>
 
       {/* Stats counter ribbon */}

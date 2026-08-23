@@ -44,6 +44,8 @@ import {
   Layers,
   Car as CarIcon,
   Calendar,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export const AgencySettingsView: React.FC = () => {
@@ -888,6 +890,70 @@ export const AgencySettingsView: React.FC = () => {
                   <option value="DZD">Dinar Algérien (DZD DA)</option>
                   <option value="EUR">Euro (€)</option>
                 </select>
+              </div>
+
+              {/* Bouton Afficher / Cacher la fenêtre "Chercher un Véhicule" */}
+              <div className="md:col-span-2 pt-3 border-t border-white/5">
+                <div className="flex items-center justify-between p-4 bg-[#14141e] rounded-xl border border-white/10 hover:border-white/20 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                      formData.general?.showQuickSearch !== false
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                    }`}>
+                      {formData.general?.showQuickSearch !== false ? (
+                        <Eye className="w-5 h-5" />
+                      ) : (
+                        <EyeOff className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-white font-bold text-xs flex items-center space-x-2">
+                        <span>Barre de recherche d'accueil (« Chercher un Véhicule »)</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          formData.general?.showQuickSearch !== false
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                        }`}>
+                          {formData.general?.showQuickSearch !== false ? 'Affichée' : 'Masquée'}
+                        </span>
+                      </div>
+                      <p className="text-gray-400 text-[11px] mt-0.5">
+                        Activer ou désactiver la boîte de filtre rapide (Lieu de départ, dates, bouton Chercher) sur la page d'accueil.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        general: {
+                          ...(formData.general || {}),
+                          showQuickSearch: formData.general?.showQuickSearch === false ? true : false,
+                        },
+                      })
+                    }
+                    className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-2 shadow-md ${
+                      formData.general?.showQuickSearch !== false
+                        ? 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
+                        : 'bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40'
+                    }`}
+                  >
+                    {formData.general?.showQuickSearch !== false ? (
+                      <>
+                        <EyeOff className="w-4 h-4" />
+                        <span>Cacher la fenêtre</span>
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4" />
+                        <span>Afficher la fenêtre</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

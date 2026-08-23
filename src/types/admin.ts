@@ -44,6 +44,7 @@ export interface AgencySettings {
     currencyDefault?: 'DZD' | 'EUR';
     minRentalDays?: number;
     depositRequirement?: boolean;
+    showQuickSearch?: boolean;
   };
   supabaseConfig?: {
     url?: string;

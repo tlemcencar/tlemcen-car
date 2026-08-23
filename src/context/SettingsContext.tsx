@@ -51,6 +51,7 @@ export const defaultSettings: AgencySettings = {
     currencyDefault: 'DZD',
     minRentalDays: 1,
     depositRequirement: true,
+    showQuickSearch: true,
   },
 };
 
