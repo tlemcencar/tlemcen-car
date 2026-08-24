@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Loader2, Sparkles, CheckCircle, X, ArrowLeft } from 'lucide-react';
+import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface ReservationFrameProps {
   reservationUrl?: string;
@@ -40,48 +40,9 @@ export const ReservationFrame: React.FC<ReservationFrameProps> = ({
   }, [iframeUrl]);
 
   return (
-    <div className={`relative bg-[#0d0d14] rounded-2xl border border-white/10 p-5 space-y-4 shadow-xl ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2">
-        <div className="flex items-center space-x-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
-            <Calendar className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-sm font-bold text-white font-serif flex items-center space-x-2 truncate">
-              <span className="truncate">Calendrier de Réservation</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-sans border border-emerald-500/30 shrink-0">
-                En ligne
-              </span>
-            </h3>
-            <p className="text-[11px] text-gray-400 truncate max-w-[200px] sm:max-w-md font-mono">
-              URL: {iframeUrl}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2 shrink-0">
-          <span className="text-[11px] text-emerald-400 font-mono hidden md:inline-flex items-center mr-2">
-            <Sparkles className="w-3.5 h-3.5 mr-1 text-emerald-400 animate-pulse" />
-            Mises à jour instantanées
-          </span>
-
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Fermer le calendrier"
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#ff2e4d]/20 hover:bg-[#ff2e4d] text-white border border-[#ff2e4d]/40 shadow-[0_0_12px_rgba(255,46,77,0.3)] transition-all text-xs font-bold uppercase cursor-pointer"
-            >
-              <span className="hidden sm:inline">Fermer</span>
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
+    <div className={`relative bg-[#0d0d14] rounded-2xl border border-white/10 p-3 sm:p-4 space-y-3 shadow-xl ${className}`}>
       {/* Direct iframe container */}
-      <div className="relative w-full rounded-xl overflow-hidden border border-white/10 bg-[#09090d] min-h-[500px]">
+      <div className="relative w-full rounded-xl overflow-hidden border border-white/10 bg-[#09090d] min-h-[480px]">
         {isLoading && (
           <div className="absolute inset-0 bg-[#09090d]/90 backdrop-blur-sm flex flex-col items-center justify-center z-10 space-y-3">
             <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
