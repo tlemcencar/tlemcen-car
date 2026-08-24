@@ -47,7 +47,7 @@ export const CarPhotoSlider: React.FC<CarPhotoSliderProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0.8, scale: 0.98 }}
           transition={{ duration: 0.3 }}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
       </AnimatePresence>
 

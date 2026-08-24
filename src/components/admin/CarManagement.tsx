@@ -185,12 +185,12 @@ export const CarManagement: React.FC<CarManagementProps> = ({
             >
               <div>
                 {/* Photo Thumbnail Header */}
-                <div className="relative h-48 w-full overflow-hidden bg-[#07070a]">
+                <div className="relative h-52 w-full overflow-hidden bg-[#0a0a10] flex items-center justify-center">
                   <img
                     src={car.image}
                     alt={car.name}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                   />
 
                   {/* Status Badges */}
