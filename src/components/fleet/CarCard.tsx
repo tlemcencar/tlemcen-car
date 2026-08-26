@@ -12,7 +12,7 @@ import { getWhatsAppBookingUrl } from '../../utils/whatsapp';
 interface CarCardProps {
   car: Car;
   onSelectCar: (car: Car) => void;
-  onViewDetails: (car: Car) => void;
+  onViewDetails?: (car: Car) => void;
 }
 
 export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetails }) => {
@@ -90,7 +90,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
           </div>
 
           <h3
-            onClick={() => onViewDetails(car)}
+            onClick={() => onViewDetails?.(car)}
             className="text-lg font-black text-white group-hover:text-[#ff2e4d] transition-colors line-clamp-1 cursor-pointer"
           >
             {car.name}
@@ -141,14 +141,6 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
             >
               <MessageSquare className="w-4 h-4 fill-current stroke-none" />
             </a>
-
-            {/* View Details */}
-            <button
-              onClick={() => onViewDetails(car)}
-              className="px-3 py-2 text-xs font-semibold text-gray-300 hover:text-white bg-[#1a1a24] hover:bg-[#232332] rounded-xl border border-white/10 transition-colors"
-            >
-              Fiche
-            </button>
 
             {/* Reserve Now */}
             <button
