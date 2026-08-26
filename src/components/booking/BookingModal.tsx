@@ -290,22 +290,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onNavigateToFleet })
               {/* Extra Options Checklist */}
               <div className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                  Options & Assurances complémentaires ({totalDays} jour(s))
+                  Options complémentaires
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${options.fullInsurance ? 'bg-[#ff2e4d]/10 border-[#ff2e4d]' : 'bg-[#14141c] border-white/5'}`}>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={options.fullInsurance}
-                        onChange={(e) => setOptions({ ...options, fullInsurance: e.target.checked })}
-                        className="accent-[#ff2e4d]"
-                      />
-                      <span className="text-xs text-white font-medium">Assurance Tous Risques Zéro Franchise</span>
-                    </div>
-                    <span className="text-xs text-[#ff2e4d] font-bold">+{currency === 'EUR' ? '15€' : '3 000 DA'}/j</span>
-                  </label>
-
                   <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${options.additionalDriver ? 'bg-[#ff2e4d]/10 border-[#ff2e4d]' : 'bg-[#14141c] border-white/5'}`}>
                     <div className="flex items-center space-x-2">
                       <input
@@ -316,7 +303,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onNavigateToFleet })
                       />
                       <span className="text-xs text-white font-medium">Conducteur Additionnel</span>
                     </div>
-                    <span className="text-xs text-[#ff2e4d] font-bold">+{currency === 'EUR' ? '8€' : '1 500 DA'}/j</span>
+                    <span className="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                      GRATUIT
+                    </span>
                   </label>
 
                   <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${options.childSeat ? 'bg-[#ff2e4d]/10 border-[#ff2e4d]' : 'bg-[#14141c] border-white/5'}`}>
@@ -329,20 +318,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onNavigateToFleet })
                       />
                       <span className="text-xs text-white font-medium">Siège Bébé Sécurisé</span>
                     </div>
-                    <span className="text-xs text-[#ff2e4d] font-bold">+{currency === 'EUR' ? '5€' : '1 000 DA'}/j</span>
-                  </label>
-
-                  <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${options.gpsNavigation ? 'bg-[#ff2e4d]/10 border-[#ff2e4d]' : 'bg-[#14141c] border-white/5'}`}>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={options.gpsNavigation}
-                        onChange={(e) => setOptions({ ...options, gpsNavigation: e.target.checked })}
-                        className="accent-[#ff2e4d]"
-                      />
-                      <span className="text-xs text-white font-medium">Wi-Fi & GPS 3D Embarqué</span>
-                    </div>
-                    <span className="text-xs text-[#ff2e4d] font-bold">+{currency === 'EUR' ? '5€' : '1 000 DA'}/j</span>
+                    <span className="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                      GRATUIT
+                    </span>
                   </label>
                 </div>
               </div>

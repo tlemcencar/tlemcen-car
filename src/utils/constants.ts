@@ -61,8 +61,8 @@ export const TLEMCEN_LOCATIONS: LocationOption[] = [
 
 export const OPTION_PRICES = {
   fullInsurance: { dzd: 3000, eur: 15, name: 'Assurance Tous Risques Zéro Franchise' },
-  additionalDriver: { dzd: 1500, eur: 8, name: 'Conducteur Additionnel Autorisoisé' },
-  childSeat: { dzd: 1000, eur: 5, name: 'Siège Auto Bébé Homologué' },
+  additionalDriver: { dzd: 0, eur: 0, name: 'Conducteur Additionnel (Gratuit)' },
+  childSeat: { dzd: 0, eur: 0, name: 'Siège Bébé Sécurisé (Gratuit)' },
   gpsNavigation: { dzd: 1000, eur: 5, name: 'GPS 3D & Wi-Fi Haut Débit Embarqué' },
   airportDelivery: { dzd: 0, eur: 0, name: 'Accueil VIP Aéroport Zenata (Gratuit)' },
 };
