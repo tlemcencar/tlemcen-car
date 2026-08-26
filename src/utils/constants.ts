@@ -3,9 +3,9 @@ import { LocationOption } from '../types';
 export const AGENCY_DETAILS = {
   name: 'Tlemcen Car',
   tagline: 'Location de Voitures de Luxe & Prestige à Tlemcen',
-  phone: '+213 550 12 34 56',
-  phoneFormatted: '+213 (0) 550 12 34 56',
-  whatsapp: '213550123456',
+  phone: '+213 554 708 866',
+  phoneFormatted: '+213 (0) 554 708 866',
+  whatsapp: '213554708866',
   email: 'contact@tlemcen-car.com',
   address: 'Boulevard Mohamed V, Centre-Ville, 13000 Tlemcen, Algérie',
   airportBranch: 'Aéroport de Tlemcen - Zenata (Messali Hadj)',
