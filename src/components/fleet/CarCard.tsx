@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Fuel, Gauge, Users, Zap, ShieldAlert, ArrowRight, Star, CheckCircle2, MessageSquare, Clock } from 'lucide-react';
+import { Fuel, Gauge, Users, Zap, ShieldAlert, ArrowRight, Star, CheckCircle2, PhoneCall, Clock } from 'lucide-react';
 import { Car } from '../../types';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -22,7 +22,6 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
 
   const priceFormatted = formatPrice(car.priceDZD, car.priceEUR, currency);
   const depositFormatted = formatPrice(car.depositDZD, car.depositEUR, currency);
-  const whatsappUrl = getWhatsAppBookingUrl(car, settings.whatsapp, settings.name, currency);
 
   return (
     <motion.div
@@ -131,15 +130,15 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* WhatsApp Quick Link */}
+            {/* WhatsApp Direct Call Link */}
             <a
-              href={whatsappUrl}
+              href="https://wa.me/call/213554708866"
               target="_blank"
-              rel="noreferrer"
-              title="Réserver sur WhatsApp"
-              className="p-2.5 bg-[#25D366]/20 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-xl border border-[#25D366]/40 transition-all duration-300"
+              rel="noopener noreferrer"
+              title="Appeler Tlemcen Car sur WhatsApp (+213 554 708 866)"
+              className="p-2.5 bg-[#25D366]/20 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-xl border border-[#25D366]/40 transition-all duration-300 flex items-center justify-center shrink-0"
             >
-              <MessageSquare className="w-4 h-4 fill-current stroke-none" />
+              <PhoneCall className="w-4 h-4" />
             </a>
 
             {/* Reserve Now */}
@@ -152,14 +151,14 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
                 }
               }}
               title={(!car.carId || car.carId.trim() === '') ? 'Calendrier indisponible' : 'Réserver ce véhicule'}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center whitespace-nowrap ${
+              className={`px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center whitespace-nowrap ${
                 (car.carId && car.carId.trim() !== '')
-                  ? 'text-white bg-gradient-to-r from-[#ff2e4d] to-[#d60029] hover:from-[#e60026] hover:to-[#b30020] shadow-[0_0_15px_rgba(255,46,77,0.4)] cursor-pointer'
+                  ? 'text-white bg-gradient-to-r from-[#ff2e4d] to-[#d60029] hover:from-[#e60026] hover:to-[#b30020] shadow-[0_0_18px_rgba(255,46,77,0.45)] cursor-pointer'
                   : 'bg-gray-800/80 text-gray-500 border border-white/5 cursor-not-allowed opacity-70'
               }`}
             >
               <span>{(!car.carId || car.carId.trim() === '') ? 'Calendrier indisponible' : 'Réserver'}</span>
-              {(car.carId && car.carId.trim() !== '') && <ArrowRight className="w-3.5 h-3.5 ml-1" />}
+              {(car.carId && car.carId.trim() !== '') && <ArrowRight className="w-4 h-4 ml-1.5" />}
             </button>
           </div>
         </div>
