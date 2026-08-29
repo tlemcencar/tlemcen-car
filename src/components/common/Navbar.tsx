@@ -110,9 +110,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
                 <span className="text-xl font-black tracking-wider text-white font-serif uppercase">
                   {settings.name}
                 </span>
-                <span className="ml-2 text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-[#ff2e4d]/20 text-[#ff2e4d] border border-[#ff2e4d]/30">
-                  LUXURY
-                </span>
               </div>
               <p className="text-[10px] text-gray-400 font-light tracking-widest uppercase">
                 {settings.tagline || 'Location Prestige & VIP'}

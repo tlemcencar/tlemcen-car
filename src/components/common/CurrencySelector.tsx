@@ -8,9 +8,9 @@ export const CurrencySelector: React.FC = () => {
     <div className="flex items-center bg-[#181820] p-1 rounded-full border border-white/10">
       <button
         onClick={() => setCurrency('DZD')}
-        className={`px-3 py-1 text-xs font-semibold rounded-full transition-all duration-300 ${
+        className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 ${
           currency === 'DZD'
-            ? 'bg-[#ff2e4d] text-white shadow-[0_0_12px_rgba(255,46,77,0.4)]'
+            ? 'bg-[#eab308] text-black shadow-[0_0_14px_rgba(234,179,8,0.55)] scale-105'
             : 'text-gray-400 hover:text-white'
         }`}
       >
@@ -18,9 +18,9 @@ export const CurrencySelector: React.FC = () => {
       </button>
       <button
         onClick={() => setCurrency('EUR')}
-        className={`px-3 py-1 text-xs font-semibold rounded-full transition-all duration-300 ${
+        className={`px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 ${
           currency === 'EUR'
-            ? 'bg-[#ff2e4d] text-white shadow-[0_0_12px_rgba(255,46,77,0.4)]'
+            ? 'bg-[#eab308] text-black shadow-[0_0_14px_rgba(234,179,8,0.55)] scale-105'
             : 'text-gray-400 hover:text-white'
         }`}
       >
