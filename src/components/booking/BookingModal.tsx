@@ -19,6 +19,7 @@ interface BookingModalProps {
 
 export const BookingModal: React.FC<BookingModalProps> = ({ onNavigateToFleet }) => {
   const { settings } = useSettings();
+  const locations = settings.locations && settings.locations.length > 0 ? settings.locations : TLEMCEN_LOCATIONS;
   const {
     isModalOpen,
     closeBookingModal,
@@ -226,7 +227,7 @@ Merci de me confirmer la disponibilité et ma réservation.`;
                     onChange={(e) => setSearchState({ ...searchState, pickupLocation: e.target.value })}
                     className="w-full bg-[#181822] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff2e4d]"
                   >
-                    {TLEMCEN_LOCATIONS.map((loc) => (
+                    {locations.map((loc) => (
                       <option key={loc.id} value={loc.name}>
                         {loc.name}
                       </option>
@@ -241,7 +242,7 @@ Merci de me confirmer la disponibilité et ma réservation.`;
                     onChange={(e) => setSearchState({ ...searchState, returnLocation: e.target.value })}
                     className="w-full bg-[#181822] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#ff2e4d]"
                   >
-                    {TLEMCEN_LOCATIONS.map((loc) => (
+                    {locations.map((loc) => (
                       <option key={loc.id} value={loc.name}>
                         {loc.name}
                       </option>

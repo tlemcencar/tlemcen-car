@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, ShieldCheck, MapPin, PhoneCall, Award, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import heroCarImg from '../../assets/images/hero_luxury_car_1785318790966.jpg';
+import logoBadgeImg from '../../assets/images/tlemcen_car_logo_1788008979715.jpg';
 import { QuickSearchBox } from '../booking/QuickSearchBox';
-import { AGENCY_DETAILS } from '../../utils/constants';
 import { useSettings } from '../../context/SettingsContext';
 
 interface HeroProps {
@@ -43,18 +43,23 @@ export const Hero: React.FC<HeroProps> = ({ onNavigateToFleet, onNavigateToServi
             <span>L’Excellence de la Location Automobiles à Tlemcen</span>
           </motion.div>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          {/* Centered Brand Photo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight font-serif tracking-tight text-center"
+            className="w-full max-w-xl sm:max-w-2xl mx-auto flex justify-center items-center py-2"
           >
-            Tlemcen-car <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-white via-[#ff667d] to-[#ff2e4d] bg-clip-text text-transparent block sm:inline">
-              Prestige & Élégance
-            </span>
-          </motion.h1>
+            <div className="relative group rounded-2xl overflow-hidden p-1.5 bg-gradient-to-b from-white/20 via-white/5 to-[#ff2e4d]/40 shadow-[0_0_45px_rgba(255,46,77,0.35)] border border-white/15 backdrop-blur-md">
+              <img
+                src={logoBadgeImg}
+                alt="Tlemcen Car - Get The Best Car"
+                referrerPolicy="no-referrer"
+                className="w-full max-h-56 sm:max-h-72 md:max-h-80 object-contain rounded-xl shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]"
+              />
+              <div className="absolute inset-0 rounded-xl pointer-events-none ring-1 ring-inset ring-white/10" />
+            </div>
+          </motion.div>
 
           {/* Subtitle */}
           <motion.p

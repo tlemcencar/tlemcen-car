@@ -25,6 +25,50 @@ const DEFAULT_SETTINGS = {
   airportBranch: "Comptoir VIP - Hall Arrivées, Aéroport Tlemcen Zenata (Messali Hadj)",
   workingHours: "7j/7 - 24h/24 (Assistance & Service VIP)",
   officeHours: "08:00 - 20:00 (Du Samedi au Jeudi)",
+  locations: [
+    {
+      id: "zenata-airport",
+      name: "Aéroport Tlemcen Zenata (Messali Hadj)",
+      address: "Aéroport Messali Hadj, Zenata, Tlemcen",
+      isAirport: true,
+      extraFeeDZD: 0
+    },
+    {
+      id: "tlemcen-center",
+      name: "Agence Centre-Ville Tlemcen",
+      address: "Boulevard Mohamed V, Tlemcen",
+      isAirport: false,
+      extraFeeDZD: 0
+    },
+    {
+      id: "mansourah",
+      name: "Mansourah - Agence Annexe",
+      address: "Rond-point Mansourah, Tlemcen",
+      isAirport: false,
+      extraFeeDZD: 0
+    },
+    {
+      id: "hotel-renaissance",
+      name: "Hôtel Renaissance Lalla Setti",
+      address: "Plateau Lalla Setti, Tlemcen",
+      isAirport: false,
+      extraFeeDZD: 1000
+    },
+    {
+      id: "imama",
+      name: "Quartier Imama (Gare routière)",
+      address: "Imama, Tlemcen",
+      isAirport: false,
+      extraFeeDZD: 0
+    },
+    {
+      id: "custom-hotel",
+      name: "Livraison à votre Hôtel / Domicile Tlemcen",
+      address: "Livraison sur mesure dans la wilaya de Tlemcen",
+      isAirport: false,
+      extraFeeDZD: 2000
+    }
+  ],
   socials: {
     instagram: "https://instagram.com/tlemcencar_luxury",
     facebook: "https://facebook.com/tlemcencar",

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { AgencySettings } from '../../types/admin';
+import { LocationOption } from '../../types';
+import { TLEMCEN_LOCATIONS } from '../../utils/constants';
 import {
   isSupabaseConfigured,
   SUPABASE_SQL_SCHEMA,
@@ -46,6 +48,11 @@ import {
   Calendar,
   Eye,
   EyeOff,
+  Plus,
+  Trash2,
+  Edit2,
+  Plane,
+  Navigation,
 } from 'lucide-react';
 
 export const AgencySettingsView: React.FC = () => {
@@ -54,6 +61,7 @@ export const AgencySettingsView: React.FC = () => {
     const creds = getSupabaseCredentials();
     return {
       ...settings,
+      locations: settings.locations && settings.locations.length > 0 ? settings.locations : TLEMCEN_LOCATIONS,
       seo: {
         metaTitle: 'Tlemcen Car Luxury & Prestige - Location de Voitures VIP à Tlemcen',
         metaDescription: 'Louez des véhicules de prestige à Tlemcen et à l\'Aéroport Messali Hadj Zenata. Mercedes G63, Porsche 911, Range Rover, Audi RS6.',
@@ -91,6 +99,97 @@ export const AgencySettingsView: React.FC = () => {
       },
     };
   });
+
+  // State for adding / editing a location
+  const [editingLocationId, setEditingLocationId] = useState<string | null>(null);
+  const [locationForm, setLocationForm] = useState<Partial<LocationOption>>({
+    name: '',
+    address: '',
+    isAirport: false,
+    extraFeeDZD: 0,
+  });
+  const [isAddingLocation, setIsAddingLocation] = useState(false);
+
+  const handleStartAddLocation = () => {
+    setEditingLocationId(null);
+    setLocationForm({
+      name: '',
+      address: '',
+      isAirport: false,
+      extraFeeDZD: 0,
+    });
+    setIsAddingLocation(true);
+  };
+
+  const handleStartEditLocation = (loc: LocationOption) => {
+    setEditingLocationId(loc.id);
+    setLocationForm({
+      name: loc.name,
+      address: loc.address,
+      isAirport: Boolean(loc.isAirport),
+      extraFeeDZD: loc.extraFeeDZD || 0,
+    });
+    setIsAddingLocation(true);
+  };
+
+  const handleSaveLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!locationForm.name?.trim()) {
+      showToast('error', 'Nom requis', 'Veuillez renseigner le nom du lieu.');
+      return;
+    }
+
+    const currentLocations = formData.locations || TLEMCEN_LOCATIONS;
+
+    if (editingLocationId) {
+      // Update existing
+      const updated = currentLocations.map((loc) =>
+        loc.id === editingLocationId
+          ? {
+              ...loc,
+              name: locationForm.name!.trim(),
+              address: locationForm.address?.trim() || locationForm.name!.trim(),
+              isAirport: Boolean(locationForm.isAirport),
+              extraFeeDZD: Number(locationForm.extraFeeDZD) || 0,
+            }
+          : loc
+      );
+      setFormData((prev) => ({ ...prev, locations: updated }));
+      showToast('success', 'Lieu modifié', `Le lieu "${locationForm.name}" a été mis à jour.`);
+    } else {
+      // Add new
+      const newLoc: LocationOption = {
+        id: `loc-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        name: locationForm.name!.trim(),
+        address: locationForm.address?.trim() || locationForm.name!.trim(),
+        isAirport: Boolean(locationForm.isAirport),
+        extraFeeDZD: Number(locationForm.extraFeeDZD) || 0,
+      };
+      const updated = [...currentLocations, newLoc];
+      setFormData((prev) => ({ ...prev, locations: updated }));
+      showToast('success', 'Lieu ajouté', `Le lieu "${locationForm.name}" a été ajouté.`);
+    }
+
+    setIsAddingLocation(false);
+    setEditingLocationId(null);
+    setLocationForm({ name: '', address: '', isAirport: false, extraFeeDZD: 0 });
+  };
+
+  const handleDeleteLocation = (id: string, name: string) => {
+    const currentLocations = formData.locations || TLEMCEN_LOCATIONS;
+    if (currentLocations.length <= 1) {
+      showToast('error', 'Action impossible', 'Vous devez conserver au moins un lieu de prise en charge.');
+      return;
+    }
+    const updated = currentLocations.filter((loc) => loc.id !== id);
+    setFormData((prev) => ({ ...prev, locations: updated }));
+    showToast('info', 'Lieu supprimé', `Le lieu "${name}" a été supprimé de la liste.`);
+  };
+
+  const handleResetDefaultLocations = () => {
+    setFormData((prev) => ({ ...prev, locations: TLEMCEN_LOCATIONS }));
+    showToast('info', 'Lieux réinitialisés', 'La liste des lieux a été restaurée par défaut.');
+  };
 
   const [copiedSql, setCopiedSql] = useState(false);
   const [showSqlViewer, setShowSqlViewer] = useState(false);
@@ -686,6 +785,193 @@ export const AgencySettingsView: React.FC = () => {
                   className="w-full bg-[#14141e] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#ff2e4d]"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Section: Gestion des Lieux de Prise en charge et Retour */}
+          <div className="bg-[#0e0e14] p-6 rounded-2xl border border-white/10 space-y-5 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-l-2 border-[#ff2e4d] pl-3">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center">
+                  <MapPin className="w-4 h-4 mr-2 text-[#ff2e4d]" />
+                  Gestion des Lieux de Prise en Charge & de Retour ({formData.locations?.length || 0})
+                </h3>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Ajoutez, modifiez ou supprimez les lieux proposés aux clients dans le formulaire de réservation et la barre de recherche.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleResetDefaultLocations}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-xs font-semibold rounded-xl transition-all"
+                  title="Restaurer la liste standard de Tlemcen"
+                >
+                  Restaurer par défaut
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleStartAddLocation}
+                  className="px-3.5 py-1.5 bg-[#ff2e4d] hover:bg-[#e60026] text-white text-xs font-bold rounded-xl shadow-[0_0_15px_rgba(255,46,77,0.3)] transition-all flex items-center space-x-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Ajouter un Lieu</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal / Inline Form for Adding or Editing a Location */}
+            {isAddingLocation && (
+              <div className="p-4 bg-[#141420] border border-[#ff2e4d]/30 rounded-xl space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <span className="text-xs font-bold text-white flex items-center">
+                    {editingLocationId ? <Edit2 className="w-3.5 h-3.5 text-amber-400 mr-1.5" /> : <Plus className="w-3.5 h-3.5 text-[#ff2e4d] mr-1.5" />}
+                    {editingLocationId ? 'Modifier le lieu de prise / retour' : 'Nouveau lieu de prise / retour'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingLocation(false);
+                      setEditingLocationId(null);
+                    }}
+                    className="text-gray-400 hover:text-white text-xs"
+                  >
+                    Annuler
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div className="md:col-span-2">
+                    <label className="block text-gray-300 font-bold mb-1">Nom du Lieu * (ex: Agence Centre-Ville, Aéroport Zenata...)</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nom affiché au client"
+                      value={locationForm.name || ''}
+                      onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
+                      className="w-full bg-[#1a1a28] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#ff2e4d]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-300 font-bold mb-1">Adresse ou précision géographique</label>
+                    <input
+                      type="text"
+                      placeholder="ex: Boulevard Mohamed V, Tlemcen"
+                      value={locationForm.address || ''}
+                      onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })}
+                      className="w-full bg-[#1a1a28] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#ff2e4d]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-300 font-bold mb-1">Frais Supplémentaires DZD (0 = Gratuit)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="500"
+                      placeholder="0"
+                      value={locationForm.extraFeeDZD ?? 0}
+                      onChange={(e) => setLocationForm({ ...locationForm, extraFeeDZD: Number(e.target.value) })}
+                      className="w-full bg-[#1a1a28] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#ff2e4d]"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex items-center space-x-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="isAirportCheckbox"
+                      checked={Boolean(locationForm.isAirport)}
+                      onChange={(e) => setLocationForm({ ...locationForm, isAirport: e.target.checked })}
+                      className="w-4 h-4 rounded bg-[#1a1a28] border-white/20 text-[#ff2e4d] focus:ring-0 cursor-pointer"
+                    />
+                    <label htmlFor="isAirportCheckbox" className="text-xs text-gray-300 font-medium cursor-pointer flex items-center">
+                      <Plane className="w-3.5 h-3.5 text-blue-400 mr-1.5" />
+                      Ce lieu est un Aéroport (Aéroport Zenata ou autre)
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end space-x-2 pt-2 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingLocation(false);
+                      setEditingLocationId(null);
+                    }}
+                    className="px-3.5 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-xs font-semibold"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveLocation}
+                    className="px-4 py-1.5 bg-gradient-to-r from-[#ff2e4d] to-[#d60029] hover:from-[#e60026] text-white rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{editingLocationId ? 'Mettre à jour le lieu' : 'Enregistrer le lieu'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* List of active locations */}
+            <div className="grid grid-cols-1 gap-2.5">
+              {(formData.locations || TLEMCEN_LOCATIONS).map((loc, idx) => (
+                <div
+                  key={loc.id || idx}
+                  className="flex items-center justify-between p-3.5 bg-[#12121c] hover:bg-[#161624] border border-white/5 rounded-xl transition-all group"
+                >
+                  <div className="flex items-start space-x-3 min-w-0 flex-1 pr-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                      loc.isAirport
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-[#ff2e4d]/10 text-[#ff2e4d] border border-[#ff2e4d]/20'
+                    }`}>
+                      {loc.isAirport ? <Plane className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="text-xs font-bold text-white truncate">{loc.name}</h4>
+                        {loc.isAirport && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 shrink-0">
+                            Aéroport
+                          </span>
+                        )}
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-gray-400 border border-white/10 shrink-0">
+                          {loc.extraFeeDZD ? `+${loc.extraFeeDZD.toLocaleString()} DA` : 'Gratuit'}
+                        </span>
+                      </div>
+                      {loc.address && loc.address !== loc.name && (
+                        <p className="text-[11px] text-gray-400 truncate mt-0.5">{loc.address}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleStartEditLocation(loc)}
+                      className="p-2 bg-white/5 hover:bg-amber-500/20 text-gray-400 hover:text-amber-300 border border-white/10 hover:border-amber-500/30 rounded-lg transition-colors"
+                      title="Modifier ce lieu"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteLocation(loc.id, loc.name)}
+                      className="p-2 bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 rounded-lg transition-colors"
+                      title="Supprimer ce lieu"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

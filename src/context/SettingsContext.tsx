@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AgencySettings } from '../types/admin';
-import { AGENCY_DETAILS } from '../utils/constants';
+import { AGENCY_DETAILS, TLEMCEN_LOCATIONS } from '../utils/constants';
 import {
   fetchFromSupabase,
   saveSettingsToSupabase,
@@ -22,6 +22,7 @@ export const defaultSettings: AgencySettings = {
   airportBranch: AGENCY_DETAILS.airportBranch,
   workingHours: AGENCY_DETAILS.workingHours,
   officeHours: AGENCY_DETAILS.officeHours,
+  locations: TLEMCEN_LOCATIONS,
   socials: {
     instagram: 'https://instagram.com/tlemcencar_luxury',
     facebook: 'https://facebook.com/tlemcencar',
@@ -78,6 +79,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const merged = {
             ...defaultSettings,
             ...sbSettings,
+            locations: Array.isArray(sbSettings.locations) && sbSettings.locations.length > 0 ? sbSettings.locations : defaultSettings.locations,
             socials: { ...defaultSettings.socials, ...(sbSettings.socials || {}) },
             seo: { ...defaultSettings.seo, ...(sbSettings.seo || {}) },
             theme: { ...defaultSettings.theme, ...(sbSettings.theme || {}) },
@@ -104,6 +106,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const merged = {
               ...defaultSettings,
               ...data.settings,
+              locations: Array.isArray(data.settings.locations) && data.settings.locations.length > 0 ? data.settings.locations : defaultSettings.locations,
               socials: { ...defaultSettings.socials, ...(data.settings.socials || {}) },
             };
             setSettings(merged);

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Calendar, MapPin, Search, Car as CarIcon, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Search } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
+import { useSettings } from '../../context/SettingsContext';
 import { TLEMCEN_LOCATIONS } from '../../utils/constants';
 
 interface QuickSearchBoxProps {
@@ -9,6 +10,8 @@ interface QuickSearchBoxProps {
 
 export const QuickSearchBox: React.FC<QuickSearchBoxProps> = ({ onSearchSubmit }) => {
   const { searchState, setSearchState } = useBooking();
+  const { settings } = useSettings();
+  const locations = settings.locations && settings.locations.length > 0 ? settings.locations : TLEMCEN_LOCATIONS;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +35,7 @@ export const QuickSearchBox: React.FC<QuickSearchBoxProps> = ({ onSearchSubmit }
               }
               className="w-full bg-[#161620] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-[#ff2e4d] appearance-none cursor-pointer transition-colors"
             >
-              {TLEMCEN_LOCATIONS.map((loc) => (
+              {locations.map((loc) => (
                 <option key={loc.id} value={loc.name} className="bg-[#121218] text-white">
                   {loc.name}
                 </option>
@@ -56,7 +59,7 @@ export const QuickSearchBox: React.FC<QuickSearchBoxProps> = ({ onSearchSubmit }
               }
               className="w-full bg-[#161620] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-[#ff2e4d] appearance-none cursor-pointer transition-colors"
             >
-              {TLEMCEN_LOCATIONS.map((loc) => (
+              {locations.map((loc) => (
                 <option key={loc.id} value={loc.name} className="bg-[#121218] text-white">
                   {loc.name}
                 </option>

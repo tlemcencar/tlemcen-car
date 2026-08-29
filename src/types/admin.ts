@@ -1,3 +1,5 @@
+import { LocationOption } from './index';
+
 export interface AgencySettings {
   name: string;
   tagline: string;
@@ -12,6 +14,7 @@ export interface AgencySettings {
   airportBranch: string;
   workingHours: string;
   officeHours: string;
+  locations?: LocationOption[];
   socials: {
     instagram: string;
     facebook: string;
