@@ -105,15 +105,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
                 </div>
               </div>
             )}
-            <div>
-              <div className="flex items-center">
-                <span className="text-xl font-black tracking-wider text-white font-serif uppercase">
-                  {settings.name}
+            <div className="flex flex-col">
+              <div className="flex flex-col items-center">
+                <span className="text-lg sm:text-xl font-black tracking-wider text-white font-serif uppercase leading-tight">
+                  TLEMCEN-
+                </span>
+                <span className="text-lg sm:text-xl font-black tracking-wider text-white font-serif uppercase leading-tight text-center">
+                  CAR
                 </span>
               </div>
-              <p className="text-[10px] text-gray-400 font-light tracking-widest uppercase">
-                {settings.tagline || 'Location Prestige & VIP'}
-              </p>
+              <div className="text-[10px] leading-tight font-medium tracking-wide text-gray-100 mt-0.5">
+                <p className="text-gray-100">TEL: 05 54 70 88 66</p>
+                <p className="text-gray-200 tracking-wider">TLEMCEN VILLE</p>
+              </div>
             </div>
           </button>
 
