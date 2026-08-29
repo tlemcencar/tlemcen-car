@@ -205,9 +205,6 @@ Merci de me confirmer la disponibilité et ma réservation.`;
                     {selectedCar.category} • {selectedCar.powerHP} CH
                   </span>
                   <h3 className="text-lg font-bold text-white">{selectedCar.name}</h3>
-                  <p className="text-xs text-gray-400">
-                    Caution exigée à la prise en charge : <span className="text-white font-semibold">{depositFormatted}</span>
-                  </p>
                 </div>
               </div>
 

@@ -30,7 +30,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
       whileHover={{ y: -6 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
-      className="group relative bg-[#0e0e14]/90 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden hover:border-[#ff2e4d]/60 transition-all duration-500 shadow-2xl hover:shadow-[0_15px_40px_rgba(255,46,77,0.25)] flex flex-col justify-between"
+      className="group relative bg-[#0e0e14]/95 backdrop-blur-md rounded-2xl border-[1.5px] border-[#ff2e4d] overflow-hidden transition-all duration-500 shadow-[0_0_16px_rgba(255,46,77,0.32)] hover:shadow-[0_0_28px_rgba(255,46,77,0.55)] flex flex-col justify-between"
     >
       {/* Upper Photo Carousel Section */}
       <div className="relative">
