@@ -4,6 +4,7 @@ import { BookingRequest } from '../../types';
 import { useAdminData } from '../../context/AdminDataContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { formatPrice } from '../../utils/currency';
+import { AGENCY_DETAILS } from '../../utils/constants';
 import { ConfirmModal } from './ConfirmModal';
 import {
   Calendar,
@@ -99,9 +100,10 @@ export const BookingsManagement: React.FC = () => {
       <div className="space-y-4">
         {filteredBookings.map((b) => {
           const car = cars.find((c) => c.id === b.carId);
+          const rate = AGENCY_DETAILS.exchangeRateEURtoDZD || 273;
           const priceFormatted = formatPrice(
-            b.currency === 'DZD' ? b.totalPrice : b.totalPrice * 215,
-            b.currency === 'EUR' ? b.totalPrice : Math.round(b.totalPrice / 215),
+            b.currency === 'DZD' ? b.totalPrice : b.totalPrice * rate,
+            b.currency === 'EUR' ? b.totalPrice : Math.round(b.totalPrice / rate),
             currency
           );
 

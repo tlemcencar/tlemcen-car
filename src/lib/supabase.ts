@@ -309,7 +309,7 @@ VALUES (
     "year": 2024,
     "category": "Luxe",
     "priceDZD": 45000,
-    "priceEUR": 210,
+    "priceEUR": 165,
     "image": "https://images.unsplash.com/photo-1520031441872-265e4ff70366?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1520031441872-265e4ff70366?q=80&w=1200&auto=format&fit=crop",
@@ -326,7 +326,7 @@ VALUES (
     "featured": true,
     "available": true,
     "depositDZD": 250000,
-    "depositEUR": 1000,
+    "depositEUR": 915,
     "features": [
       "Échappement sport AMG commutable",
       "Intérieur cuir Nappa intégral rouge/noir",
@@ -357,7 +357,7 @@ VALUES (
     "year": 2023,
     "category": "Sport",
     "priceDZD": 40000,
-    "priceEUR": 190,
+    "priceEUR": 147,
     "image": "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=1200&auto=format&fit=crop",
@@ -373,7 +373,7 @@ VALUES (
     "featured": true,
     "available": true,
     "depositDZD": 200000,
-    "depositEUR": 900,
+    "depositEUR": 730,
     "features": [
       "Boîte PDK 8 rapports",
       "Pack Chrono Sport",
@@ -403,7 +403,7 @@ VALUES (
     "year": 2024,
     "category": "SUV",
     "priceDZD": 38000,
-    "priceEUR": 175,
+    "priceEUR": 139,
     "image": "https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=1200&auto=format&fit=crop",
@@ -419,7 +419,7 @@ VALUES (
     "featured": true,
     "available": true,
     "depositDZD": 200000,
-    "depositEUR": 850,
+    "depositEUR": 730,
     "features": [
       "Intérieur Cuir semi-aniline Exclusif",
       "Sièges arrière Executive Class avec massage",
@@ -449,7 +449,7 @@ VALUES (
     "year": 2024,
     "category": "Berline VIP",
     "priceDZD": 35000,
-    "priceEUR": 160,
+    "priceEUR": 128,
     "image": "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1200&auto=format&fit=crop",
@@ -465,7 +465,7 @@ VALUES (
     "featured": true,
     "available": true,
     "depositDZD": 180000,
-    "depositEUR": 750,
+    "depositEUR": 660,
     "features": [
       "Service Chauffeur VIP disponible",
       "Affichage tête haute en réalité augmentée",
@@ -495,7 +495,7 @@ VALUES (
     "year": 2023,
     "category": "Sport",
     "priceDZD": 32000,
-    "priceEUR": 145,
+    "priceEUR": 117,
     "image": "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=1200&auto=format&fit=crop",
@@ -510,7 +510,7 @@ VALUES (
     "featured": false,
     "available": true,
     "depositDZD": 160000,
-    "depositEUR": 700,
+    "depositEUR": 585,
     "features": [
       "Transmission Quattro intégrale",
       "Freins céramique RS",
@@ -540,7 +540,7 @@ VALUES (
     "year": 2024,
     "category": "SUV",
     "priceDZD": 22000,
-    "priceEUR": 100,
+    "priceEUR": 81,
     "image": "https://images.unsplash.com/photo-1541348263662-e082662d82da?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1541348263662-e082662d82da?q=80&w=1200&auto=format&fit=crop",
@@ -555,7 +555,7 @@ VALUES (
     "featured": true,
     "available": true,
     "depositDZD": 100000,
-    "depositEUR": 450,
+    "depositEUR": 365,
     "features": [
       "Moteur 5 cylindres Akrapovič",
       "Sièges Baquets CUPBucket en cuir bleu",
@@ -585,7 +585,7 @@ VALUES (
     "year": 2024,
     "category": "Économique Premium",
     "priceDZD": 18000,
-    "priceEUR": 85,
+    "priceEUR": 66,
     "image": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1200&auto=format&fit=crop",
@@ -600,7 +600,7 @@ VALUES (
     "featured": false,
     "available": true,
     "depositDZD": 80000,
-    "depositEUR": 350,
+    "depositEUR": 295,
     "features": [
       "Transmission 4MOTION avec R-Performance Torque Vectoring",
       "Échappement Akrapovič en titane",
@@ -630,7 +630,7 @@ VALUES (
     "year": 2024,
     "category": "SUV",
     "priceDZD": 16000,
-    "priceEUR": 75,
+    "priceEUR": 59,
     "image": "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=1200&auto=format&fit=crop",
     "gallery": [
       "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=1200&auto=format&fit=crop",
@@ -645,7 +645,7 @@ VALUES (
     "featured": false,
     "available": true,
     "depositDZD": 60000,
-    "depositEUR": 280,
+    "depositEUR": 220,
     "features": [
       "Pack Sport N-Line extérieur & intérieur",
       "Climatisation tri-zone automatique",

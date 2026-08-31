@@ -1178,6 +1178,35 @@ export const AgencySettingsView: React.FC = () => {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-gray-300 font-bold mb-1">
+                  Taux de Change (1 EUR en Dinars DZD)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={formData.general?.exchangeRateEURtoDZD || 273}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        general: {
+                          ...(formData.general || {}),
+                          exchangeRateEURtoDZD: Number(e.target.value) || 273,
+                        },
+                      })
+                    }
+                    placeholder="273"
+                    className="w-full bg-[#14141e] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#ff2e4d]"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-400">
+                    DA / 1 €
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Exemple : 273 (100 € = 27 300 DA / 10 € = 2 730 DA).
+                </p>
+              </div>
+
               {/* Bouton Afficher / Cacher la fenêtre "Chercher un Véhicule" */}
               <div className="md:col-span-2 pt-3 border-t border-white/5">
                 <div className="flex items-center justify-between p-4 bg-[#14141e] rounded-xl border border-white/10 hover:border-white/20 transition-all">

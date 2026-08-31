@@ -45,6 +45,7 @@ export interface AgencySettings {
   };
   general?: {
     currencyDefault?: 'DZD' | 'EUR';
+    exchangeRateEURtoDZD?: number;
     minRentalDays?: number;
     depositRequirement?: boolean;
     showQuickSearch?: boolean;

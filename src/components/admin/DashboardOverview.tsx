@@ -4,6 +4,7 @@ import { Car, CheckCircle2, Clock, Calendar, DollarSign, TrendingUp, Plus, Arrow
 import { useAdminData } from '../../context/AdminDataContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { formatPrice } from '../../utils/currency';
+import { AGENCY_DETAILS } from '../../utils/constants';
 
 interface DashboardOverviewProps {
   onNavigateToCars: () => void;
@@ -31,18 +32,19 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   }).length;
 
   // Revenue forecast (Sum of confirmed / active booking prices)
+  const rate = AGENCY_DETAILS.exchangeRateEURtoDZD || 273;
   const totalRevenueDZD = bookings
     .filter((b) => b.status !== 'annulee')
     .reduce((acc, b) => {
       if (b.currency === 'EUR') {
-        return acc + b.totalPrice * 215;
+        return acc + b.totalPrice * rate;
       }
       return acc + b.totalPrice;
     }, 0);
 
   const revenueFormatted = formatPrice(
     totalRevenueDZD,
-    Math.round(totalRevenueDZD / 215),
+    Math.round(totalRevenueDZD / rate),
     currency
   );
 

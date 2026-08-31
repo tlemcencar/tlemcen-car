@@ -11,7 +11,7 @@ export const AGENCY_DETAILS = {
   airportBranch: 'Aéroport de Tlemcen - Zenata (Messali Hadj)',
   workingHours: '7j/7 - 24h/24 (Sur réservation)',
   officeHours: 'Lun - Dim: 08h00 - 20h00',
-  exchangeRateEURtoDZD: 245, // Approximate official/informal reference rate for display flexibility
+  exchangeRateEURtoDZD: 273, // Reference exchange rate: 1 EUR = 273 DZD (e.g. 100 EUR = 27 300 DA)
 };
 
 export const TLEMCEN_LOCATIONS: LocationOption[] = [

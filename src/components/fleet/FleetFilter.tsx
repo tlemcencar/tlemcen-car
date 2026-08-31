@@ -4,6 +4,7 @@ import { Search, Filter, SlidersHorizontal, Sparkles, X, RotateCcw, ChevronDown,
 import { carService } from '../../services/carService';
 import { useCurrency } from '../../context/CurrencyContext';
 import { formatPrice } from '../../utils/currency';
+import { AGENCY_DETAILS } from '../../utils/constants';
 
 interface FleetFilterProps {
   selectedCategory: string;
@@ -48,7 +49,8 @@ export const FleetFilter: React.FC<FleetFilterProps> = ({
   const categories = carService.getCategories();
   const fuelTypes = carService.getFuelTypes();
 
-  const maxPriceFormatted = formatPrice(maxPriceDZD, Math.round(maxPriceDZD / 215), currency);
+  const rate = AGENCY_DETAILS.exchangeRateEURtoDZD || 273;
+  const maxPriceFormatted = formatPrice(maxPriceDZD, Math.round(maxPriceDZD / rate), currency);
 
   const activeFilterCount = [
     selectedCategory !== 'Toutes',

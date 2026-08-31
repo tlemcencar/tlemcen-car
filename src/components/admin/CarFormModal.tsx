@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Car } from '../../types';
 import { ImageManager } from './ImageManager';
 import { X, Check, Plus, Trash2, Car as CarIcon, Sparkles, Shield, Fuel, Gauge, Users, DollarSign, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import { AGENCY_DETAILS } from '../../utils/constants';
 
 interface CarFormModalProps {
   isOpen: boolean;
@@ -401,7 +402,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
                           setFormData({
                             ...formData,
                             priceDZD: dzd,
-                            priceEUR: Math.round(dzd / 215),
+                            priceEUR: Math.round(dzd / (AGENCY_DETAILS.exchangeRateEURtoDZD || 273)),
                           });
                         }}
                         className="w-full bg-[#161622] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-[#ff2e4d]"
@@ -433,7 +434,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
                           setFormData({
                             ...formData,
                             depositDZD: dzd,
-                            depositEUR: Math.round(dzd / 215),
+                            depositEUR: Math.round(dzd / (AGENCY_DETAILS.exchangeRateEURtoDZD || 273)),
                           });
                         }}
                         className="w-full bg-[#161622] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-[#ff2e4d]"
