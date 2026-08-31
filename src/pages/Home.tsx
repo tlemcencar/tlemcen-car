@@ -4,9 +4,9 @@ import { FeaturedCars } from '../components/home/FeaturedCars';
 import { WhyUsSection } from '../components/home/WhyUsSection';
 import { TlemcenHighlight } from '../components/home/TlemcenHighlight';
 import { Car } from '../types';
-import { REVIEWS_DATA } from '../data/reviewsData';
-import { Star, Quote, ArrowRight, Plane, PhoneCall, Sparkles } from 'lucide-react';
+import { ArrowRight, Plane, PhoneCall } from 'lucide-react';
 import { AGENCY_DETAILS } from '../utils/constants';
+import { GoogleReviewsWidget } from '../components/common/GoogleReviewsWidget';
 
 interface HomeProps {
   onNavigate: (page: string) => void;
@@ -40,13 +40,13 @@ export const Home: React.FC<HomeProps> = ({
       {/* Tlemcen Destinations Highlight */}
       <TlemcenHighlight onNavigateToFleet={() => onNavigate('fleet')} />
 
-      {/* Reviews Teaser Banner */}
+      {/* Reviews Section with Google Maps Reviews */}
       <section className="py-20 bg-[#060608] border-t border-white/5 relative">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-12">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-10">
             <div>
               <span className="text-xs font-bold uppercase tracking-widest text-[#ff2e4d] px-3 py-1 rounded-full bg-[#ff2e4d]/10 border border-[#ff2e4d]/20 inline-block mb-2">
-                Temoignages Verified
+                Avis Google Maps Officiels
               </span>
               <h2 className="text-3xl font-black text-white font-serif">
                 Ce que disent nos Clients VIP
@@ -57,45 +57,14 @@ export const Home: React.FC<HomeProps> = ({
               onClick={() => onNavigate('reviews')}
               className="mt-4 md:mt-0 text-xs font-bold text-[#ff2e4d] hover:text-white uppercase tracking-wider flex items-center space-x-1"
             >
-              <span>Voir les {REVIEWS_DATA.length} avis verified</span>
+              <span>Voir la page des avis</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {REVIEWS_DATA.slice(0, 3).map((review) => (
-              <div
-                key={review.id}
-                className="bg-[#0e0e14] p-6 rounded-2xl border border-white/10 space-y-4 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex text-amber-400">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-amber-400" />
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-gray-400 font-mono">
-                      {review.date}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-gray-300 italic leading-relaxed">
-                    "{review.comment}"
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-white">{review.clientName}</h4>
-                    <span className="text-[11px] text-[#ff2e4d]">{review.carRented}</span>
-                  </div>
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
-                    {review.city}
-                  </span>
-                </div>
-              </div>
-            ))}
+          {/* Elfsight Live Google Reviews Widget */}
+          <div className="w-full">
+            <GoogleReviewsWidget />
           </div>
         </div>
       </section>

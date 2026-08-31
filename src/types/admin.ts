@@ -62,4 +62,4 @@ export interface ToastMessage {
   message?: string;
 }
 
-export type AdminTab = 'dashboard' | 'cars' | 'bookings' | 'settings';
+export type AdminTab = 'dashboard' | 'cars' | 'bookings' | 'spots' | 'settings';

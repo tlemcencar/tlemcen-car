@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Car, CheckCircle2, Clock, Calendar, DollarSign, TrendingUp, Plus, ArrowUpRight, Sparkles, User, ShieldCheck } from 'lucide-react';
+import { Car, CheckCircle2, Clock, Calendar, DollarSign, TrendingUp, Plus, ArrowUpRight, Sparkles, User, ShieldCheck, MapPin } from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { formatPrice } from '../../utils/currency';
@@ -9,14 +9,16 @@ interface DashboardOverviewProps {
   onNavigateToCars: () => void;
   onNavigateToBookings: () => void;
   onOpenAddCarModal: () => void;
+  onNavigateToSpots?: () => void;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onNavigateToCars,
   onNavigateToBookings,
   onOpenAddCarModal,
+  onNavigateToSpots,
 }) => {
-  const { cars, bookings } = useAdminData();
+  const { cars, bookings, spots } = useAdminData();
   const { currency } = useCurrency();
 
   // Metrics calculations
@@ -269,6 +271,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <Car className="w-4 h-4 text-[#ff2e4d]" />
                 <span>Gérer les véhicules ({totalCars})</span>
               </button>
+
+              {onNavigateToSpots && (
+                <button
+                  onClick={onNavigateToSpots}
+                  className="w-full py-2.5 bg-[#161622] hover:bg-[#ff2e4d]/20 text-gray-300 hover:text-white font-semibold text-xs rounded-xl border border-white/10 hover:border-[#ff2e4d]/40 flex items-center justify-center space-x-2 transition-colors"
+                >
+                  <MapPin className="w-4 h-4 text-[#ff2e4d]" />
+                  <span>Modifier les lieux « Où Rouler » ({spots.length})</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

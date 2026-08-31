@@ -1,42 +1,14 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Navigation, Compass, ChevronRight } from 'lucide-react';
+import { useAdminData } from '../../context/AdminDataContext';
 
 interface TlemcenHighlightProps {
   onNavigateToFleet: () => void;
 }
 
 export const TlemcenHighlight: React.FC<TlemcenHighlightProps> = ({ onNavigateToFleet }) => {
-  const spots = [
-    {
-      name: 'Plateau Lalla Setti & Hôtel Renaissance',
-      category: 'Vue Panoramique & Détente VIP',
-      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1200&auto=format&fit=crop',
-      recommendedCar: 'Mercedes-AMG G 63 / Range Rover',
-      desc: 'Survolez la cité de Tlemcen et profitez d\'une vue d\'exception. Idéal en SUV 4x4 ou Cabriolet.',
-    },
-    {
-      name: 'Palais El Mechouar & Centre-Ville',
-      category: 'Patrimoine & Histoire Zianide',
-      image: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1200&auto=format&fit=crop',
-      recommendedCar: 'Mercedes Classe S / Audi RS6',
-      desc: 'Flânez dans l\'hypercentre historique avec une berline élégante et discrète.',
-    },
-    {
-      name: 'Ruines de Mansourah',
-      category: 'Monument Historique Majeur',
-      image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?q=80&w=1200&auto=format&fit=crop',
-      recommendedCar: 'Cupra Formentor / Golf 8 R',
-      desc: 'Découvrez la célèbre mosquée et le minaret de Mansourah au volant d\'une compacte dynamique.',
-    },
-    {
-      name: 'Cascades d\'El Ourit & Grottes de Béni Add',
-      category: 'Espaces Naturels & Fraîcheur',
-      image: 'https://images.unsplash.com/photo-1541348263662-e082662d82da?q=80&w=1200&auto=format&fit=crop',
-      recommendedCar: 'Hyundai Tucson / Range Rover',
-      desc: 'Sillonnez les routes sinueuses du parc national de Tlemcen en toute sérénité.',
-    },
-  ];
+  const { spots } = useAdminData();
 
   return (
     <section className="py-20 bg-[#0a0a0e] relative border-t border-white/5">
@@ -78,6 +50,12 @@ export const TlemcenHighlight: React.FC<TlemcenHighlightProps> = ({ onNavigateTo
                   src={spot.image}
                   alt={spot.name}
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (spot.fallbackImage && target.src !== spot.fallbackImage) {
+                      target.src = spot.fallbackImage;
+                    }
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f16] via-black/20 to-transparent" />

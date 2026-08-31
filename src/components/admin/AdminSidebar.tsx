@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Car, Calendar, Settings, ExternalLink, ShieldAlert, Sparkles, LogOut, Layers } from 'lucide-react';
+import { LayoutDashboard, Car, Calendar, Settings, ExternalLink, ShieldAlert, Sparkles, LogOut, Layers, MapPin } from 'lucide-react';
 import { AdminTab } from '../../types/admin';
 import { useAdminData } from '../../context/AdminDataContext';
 
@@ -14,7 +14,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onSelectTab,
   onExitAdmin,
 }) => {
-  const { cars, bookings, settings } = useAdminData();
+  const { cars, bookings, settings, spots } = useAdminData();
 
   const availableCount = cars.filter((c) => c.available).length;
   const pendingBookingsCount = bookings.filter((b) => b.status === 'en_attente').length;
@@ -38,6 +38,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       icon: Calendar,
       badge: pendingBookingsCount > 0 ? `${pendingBookingsCount} nouvelle(s)` : null,
       badgeColor: 'bg-[#ff2e4d]',
+    },
+    {
+      id: 'spots',
+      label: 'Où Rouler (Lieux)',
+      icon: MapPin,
+      badge: `${spots.length} lieux`,
     },
     {
       id: 'settings',

@@ -9,6 +9,7 @@ import { DashboardOverview } from '../components/admin/DashboardOverview';
 import { CarManagement } from '../components/admin/CarManagement';
 import { BookingsManagement } from '../components/admin/BookingsManagement';
 import { AgencySettingsView } from '../components/admin/AgencySettingsView';
+import { SpotsManagement } from '../components/admin/SpotsManagement';
 import { CarFormModal } from '../components/admin/CarFormModal';
 import { ToastContainer } from '../components/admin/ToastContainer';
 import { AdminPinLock } from '../components/admin/AdminPinLock';
@@ -115,6 +116,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateToClient }) => {
                 <DashboardOverview
                   onNavigateToCars={() => setActiveTab('cars')}
                   onNavigateToBookings={() => setActiveTab('bookings')}
+                  onNavigateToSpots={() => setActiveTab('spots')}
                   onOpenAddCarModal={handleOpenAddCarModal}
                 />
               )}
@@ -127,6 +129,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigateToClient }) => {
               )}
 
               {activeTab === 'bookings' && <BookingsManagement />}
+
+              {activeTab === 'spots' && <SpotsManagement />}
 
               {activeTab === 'settings' && <AgencySettingsView />}
             </motion.div>

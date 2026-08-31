@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Car, BookingRequest } from '../types';
+import { Car, BookingRequest, TlemcenSpot } from '../types';
 import { AgencySettings, ToastMessage } from '../types/admin';
 import { CARS_DATA } from '../data/carsData';
+import { DEFAULT_SPOTS } from '../data/spotsData';
 import { AGENCY_DETAILS } from '../utils/constants';
 import { useSettings } from './SettingsContext';
 import { carService } from '../services/carService';
@@ -29,6 +30,12 @@ interface AdminDataContextType {
   addBooking: (booking: BookingRequest) => void;
   updateBookingStatus: (id: string, status: BookingRequest['status']) => void;
   deleteBooking: (id: string) => void;
+
+  spots: TlemcenSpot[];
+  updateSpot: (id: string, spotData: Partial<TlemcenSpot>) => Promise<{ success: boolean }>;
+  addSpot: (spotData: Omit<TlemcenSpot, 'id'>) => Promise<{ success: boolean }>;
+  deleteSpot: (id: string) => Promise<{ success: boolean }>;
+  resetSpotsToDefault: () => void;
 
   toasts: ToastMessage[];
   showToast: (type: ToastMessage['type'], title: string, message?: string) => void;
@@ -178,6 +185,64 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // 3. Bookings state
   const [bookings, setBookings] = useState<BookingRequest[]>(defaultInitialBookings);
+
+  // 4. Tourist Highlights / Spots ("Où Rouler à Tlemcen ?") state
+  const [spots, setSpots] = useState<TlemcenSpot[]>(() => {
+    try {
+      const saved = localStorage.getItem('tlemcen_car_spots_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading spots from localStorage:', e);
+    }
+    return DEFAULT_SPOTS;
+  });
+
+  const saveSpotsToStorage = (newSpots: TlemcenSpot[]) => {
+    try {
+      localStorage.setItem('tlemcen_car_spots_data', JSON.stringify(newSpots));
+    } catch (e) {
+      console.warn('Error writing spots to localStorage:', e);
+    }
+  };
+
+  const updateSpot = async (id: string, spotData: Partial<TlemcenSpot>): Promise<{ success: boolean }> => {
+    const updated = spots.map((s) => (s.id === id ? { ...s, ...spotData } : s));
+    setSpots(updated);
+    saveSpotsToStorage(updated);
+    showToast('success', 'Lieu touristique mis à jour', 'La photo et les informations ont été enregistrées.');
+    return { success: true };
+  };
+
+  const addSpot = async (spotData: Omit<TlemcenSpot, 'id'>): Promise<{ success: boolean }> => {
+    const newSpot: TlemcenSpot = {
+      ...spotData,
+      id: `spot-${Date.now()}`,
+    };
+    const updated = [...spots, newSpot];
+    setSpots(updated);
+    saveSpotsToStorage(updated);
+    showToast('success', 'Nouveau lieu ajouté', `${newSpot.name} a été ajouté à la section Où Rouler.`);
+    return { success: true };
+  };
+
+  const deleteSpot = async (id: string): Promise<{ success: boolean }> => {
+    const updated = spots.filter((s) => s.id !== id);
+    setSpots(updated);
+    saveSpotsToStorage(updated);
+    showToast('warning', 'Lieu supprimé', 'Le circuit a été retiré de la liste.');
+    return { success: true };
+  };
+
+  const resetSpotsToDefault = () => {
+    setSpots(DEFAULT_SPOTS);
+    saveSpotsToStorage(DEFAULT_SPOTS);
+    showToast('info', 'Lieux réinitialisés', 'Les 4 lieux par défaut de Tlemcen ont été restaurés.');
+  };
 
   // Fetch full store from Supabase / Express server on mount
   useEffect(() => {
@@ -478,6 +543,11 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addBooking,
         updateBookingStatus,
         deleteBooking,
+        spots,
+        updateSpot,
+        addSpot,
+        deleteSpot,
+        resetSpotsToDefault,
         toasts,
         showToast,
         removeToast,

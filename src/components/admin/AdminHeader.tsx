@@ -22,6 +22,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ activeTab, onExitAdmin
         return 'Gestion de la Flotte Automobile';
       case 'bookings':
         return 'Réservations Client & Demandes';
+      case 'spots':
+        return 'Où Rouler à Tlemcen ? (Photos & Circuits)';
       case 'settings':
         return 'Paramètres de l\'Agence';
       default:

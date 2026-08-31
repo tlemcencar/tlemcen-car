@@ -103,3 +103,13 @@ export interface FaqItem {
 }
 
 export type Currency = 'DZD' | 'EUR';
+
+export interface TlemcenSpot {
+  id: string;
+  name: string;
+  category: string;
+  image: string;
+  fallbackImage?: string;
+  recommendedCar: string;
+  desc: string;
+}
