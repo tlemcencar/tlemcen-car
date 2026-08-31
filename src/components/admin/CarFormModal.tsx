@@ -482,7 +482,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
                         setFormData({
                           ...formData,
                           available: false,
-                          nextAvailableDate: formData.nextAvailableDate || 'Demain à 14:00',
+                          nextAvailableDate: formData.nextAvailableDate || '',
                         })
                       }
                       className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
@@ -492,7 +492,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
                       }`}
                     >
                       <div>
-                        <div className="font-bold text-sm text-amber-400">⏳ Loué / Sur Réservation</div>
+                        <div className="font-bold text-sm text-amber-400">⏳ En Location</div>
                         <div className="text-[11px] text-gray-300 mt-0.5">Véhicule actuellement en circulation</div>
                       </div>
                     </button>

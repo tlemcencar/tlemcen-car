@@ -151,7 +151,7 @@ export const CarManagement: React.FC<CarManagementProps> = ({
                 filterStatus === 'rented' ? 'bg-amber-500 text-white font-bold' : 'text-gray-400 hover:text-white'
               }`}
             >
-              Loués ({cars.filter((c) => !c.available).length})
+              En Location ({cars.filter((c) => !c.available).length})
             </button>
           </div>
 
@@ -217,7 +217,7 @@ export const CarManagement: React.FC<CarManagementProps> = ({
                     title="Cliquer pour changer le statut"
                   >
                     <Power className="w-3 h-3" />
-                    <span>{car.available ? 'Disponible' : 'Loué / Maintenance'}</span>
+                    <span>{car.available ? 'Disponible' : 'En Location'}</span>
                   </button>
 
                   <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-gray-300 text-[10px] rounded-md backdrop-blur-md flex items-center space-x-1">

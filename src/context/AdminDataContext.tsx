@@ -494,7 +494,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const toggleCarStatus = async (id: string, newAvailable: boolean, nextDate?: string): Promise<{ success: boolean; error?: string }> => {
     return await updateCar(id, {
       available: newAvailable,
-      nextAvailableDate: newAvailable ? undefined : (nextDate || 'Demain à 14:00'),
+      nextAvailableDate: newAvailable ? undefined : nextDate,
     });
   };
 

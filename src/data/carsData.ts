@@ -109,7 +109,6 @@ export const CARS_DATA: Car[] = [
     acceleration: '4.6s (0-100 km/h)',
     featured: true,
     available: false,
-    nextAvailableDate: 'Demain à 14:00',
     depositDZD: 200000,
     depositEUR: 730,
     features: [
@@ -225,7 +224,6 @@ export const CARS_DATA: Car[] = [
     acceleration: '4.2s (0-100 km/h)',
     featured: true,
     available: false,
-    nextAvailableDate: '30 Juillet',
     depositDZD: 100000,
     depositEUR: 365,
     features: [

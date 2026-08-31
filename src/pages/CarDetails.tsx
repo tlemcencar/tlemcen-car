@@ -23,7 +23,8 @@ import {
   Sparkles,
   PhoneCall,
   MessageSquare,
-  Clock
+  Clock,
+  Lock
 } from 'lucide-react';
 import { AGENCY_DETAILS } from '../utils/constants';
 import { useSettings } from '../context/SettingsContext';
@@ -40,7 +41,7 @@ export const CarDetails: React.FC<CarDetailsProps> = ({ car, onBack }) => {
 
   const priceFormatted = formatPrice(car.priceDZD, car.priceEUR, currency);
   const depositFormatted = formatPrice(car.depositDZD, car.depositEUR, currency);
-  const whatsappUrl = getWhatsAppBookingUrl(car, settings.whatsapp, settings.name, currency);
+  const whatsappUrl = getWhatsAppBookingUrl(car, undefined, undefined, currency, settings.whatsapp, settings.name);
 
   return (
     <div className="pt-28 pb-20 bg-[#07070a] min-h-screen">
@@ -92,9 +93,9 @@ export const CarDetails: React.FC<CarDetailsProps> = ({ car, onBack }) => {
                     Disponible Immédiatement
                   </span>
                 ) : (
-                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md flex items-center">
+                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md flex items-center shadow-[0_0_15px_rgba(245,158,11,0.25)]">
                     <Clock className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
-                    Disponible dès {car.nextAvailableDate || 'bientôt'}
+                    En Location
                   </span>
                 )}
               </div>
@@ -215,22 +216,47 @@ export const CarDetails: React.FC<CarDetailsProps> = ({ car, onBack }) => {
               {/* Action Buttons */}
               <div className="space-y-3 pt-2">
                 <button
-                  onClick={() => openBookingModal(car)}
-                  className="w-full py-4 bg-gradient-to-r from-[#ff2e4d] to-[#d60029] hover:from-[#e60026] hover:to-[#b30020] text-white font-bold text-sm rounded-xl shadow-[0_0_25px_rgba(255,46,77,0.4)] transition-all flex items-center justify-center space-x-2"
+                  disabled={!car.available}
+                  onClick={() => car.available && openBookingModal(car)}
+                  className={`w-full py-4 font-bold text-sm rounded-xl transition-all flex items-center justify-center space-x-2 ${
+                    car.available
+                      ? 'bg-gradient-to-r from-[#ff2e4d] to-[#d60029] hover:from-[#e60026] hover:to-[#b30020] text-white shadow-[0_0_25px_rgba(255,46,77,0.4)] cursor-pointer'
+                      : 'bg-gray-800/80 text-gray-500 border border-white/5 cursor-not-allowed opacity-70'
+                  }`}
                 >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Réserver en Ligne</span>
+                  {car.available ? (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>Réserver en Ligne</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-gray-500" />
+                      <span>En Location</span>
+                    </>
+                  )}
                 </button>
 
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-3.5 bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-white font-bold text-xs rounded-xl border border-[#25D366]/40 flex items-center justify-center space-x-2 transition-all duration-300"
-                >
-                  <MessageSquare className="w-4 h-4 fill-current stroke-none" />
-                  <span>Réserver via WhatsApp Directement</span>
-                </a>
+                {car.available ? (
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-3.5 bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-white font-bold text-xs rounded-xl border border-[#25D366]/40 flex items-center justify-center space-x-2 transition-all duration-300 shadow-[0_0_15px_rgba(37,211,102,0.2)]"
+                  >
+                    <MessageSquare className="w-4 h-4 fill-current stroke-none" />
+                    <span>Réserver via WhatsApp Directement</span>
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full py-3.5 bg-gray-800/60 text-gray-500 font-bold text-xs rounded-xl border border-white/5 flex items-center justify-center space-x-2 cursor-not-allowed opacity-70"
+                  >
+                    <Lock className="w-4 h-4 text-gray-500" />
+                    <span>WhatsApp Verrouillé (Véhicule en location)</span>
+                  </button>
+                )}
 
                 <a
                   href={`tel:${settings.phone}`}

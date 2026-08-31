@@ -4,6 +4,7 @@ import {
   X,
   Car as CarIcon,
   ArrowLeft,
+  Lock,
 } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -333,11 +334,26 @@ Merci de me confirmer la disponibilité et ma réservation.`;
                   {/* WhatsApp Booking Button */}
                   <button
                     type="button"
-                    onClick={handleSendWhatsAppBooking}
-                    className="w-full sm:w-auto px-5 py-3.5 bg-gradient-to-r from-[#25D366] to-[#1ebe5d] hover:from-[#20ba5a] hover:to-[#17a34e] text-white font-black text-xs sm:text-sm rounded-xl shadow-[0_0_25px_rgba(37,211,102,0.45)] hover:shadow-[0_0_30px_rgba(37,211,102,0.6)] transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.98]"
+                    disabled={!selectedCar.available}
+                    onClick={selectedCar.available ? handleSendWhatsAppBooking : undefined}
+                    title={!selectedCar.available ? 'Véhicule actuellement en location : envoi WhatsApp verrouillé' : 'Envoyer Ta réservation sur WhatsApp'}
+                    className={`w-full sm:w-auto px-5 py-3.5 font-black text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center space-x-2 ${
+                      selectedCar.available
+                        ? 'bg-gradient-to-r from-[#25D366] to-[#1ebe5d] hover:from-[#20ba5a] hover:to-[#17a34e] text-white shadow-[0_0_25px_rgba(37,211,102,0.45)] hover:shadow-[0_0_30px_rgba(37,211,102,0.6)] cursor-pointer active:scale-[0.98]'
+                        : 'bg-gray-800/80 text-gray-500 border border-white/5 cursor-not-allowed opacity-70'
+                    }`}
                   >
-                    <span>🟢</span>
-                    <span>Envoyer Ta réservation sur WhatsApp</span>
+                    {selectedCar.available ? (
+                      <>
+                        <span>🟢</span>
+                        <span>Envoyer Ta réservation sur WhatsApp</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4 text-gray-500" />
+                        <span>WhatsApp Verrouillé (En Location)</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
