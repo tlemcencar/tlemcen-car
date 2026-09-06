@@ -93,9 +93,9 @@ export const CarDetails: React.FC<CarDetailsProps> = ({ car, onBack }) => {
                     Disponible Immédiatement
                   </span>
                 ) : (
-                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md flex items-center shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md flex items-center">
                     <Clock className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
-                    En Location
+                    Disponible dès {car.nextAvailableDate || 'bientôt'}
                   </span>
                 )}
               </div>
@@ -232,7 +232,7 @@ export const CarDetails: React.FC<CarDetailsProps> = ({ car, onBack }) => {
                   ) : (
                     <>
                       <Lock className="w-4 h-4 text-gray-500" />
-                      <span>En Location</span>
+                      <span>Véhicule Indisponible</span>
                     </>
                   )}
                 </button>
@@ -254,7 +254,7 @@ export const CarDetails: React.FC<CarDetailsProps> = ({ car, onBack }) => {
                     className="w-full py-3.5 bg-gray-800/60 text-gray-500 font-bold text-xs rounded-xl border border-white/5 flex items-center justify-center space-x-2 cursor-not-allowed opacity-70"
                   >
                     <Lock className="w-4 h-4 text-gray-500" />
-                    <span>WhatsApp Verrouillé (Véhicule en location)</span>
+                    <span>WhatsApp Verrouillé (Véhicule non disponible)</span>
                   </button>
                 )}
 

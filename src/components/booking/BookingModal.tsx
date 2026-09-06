@@ -336,7 +336,7 @@ Merci de me confirmer la disponibilité et ma réservation.`;
                     type="button"
                     disabled={!selectedCar.available}
                     onClick={selectedCar.available ? handleSendWhatsAppBooking : undefined}
-                    title={!selectedCar.available ? 'Véhicule actuellement en location : envoi WhatsApp verrouillé' : 'Envoyer Ta réservation sur WhatsApp'}
+                    title={!selectedCar.available ? 'Véhicule indisponible : envoi WhatsApp verrouillé' : 'Envoyer Ta réservation sur WhatsApp'}
                     className={`w-full sm:w-auto px-5 py-3.5 font-black text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center space-x-2 ${
                       selectedCar.available
                         ? 'bg-gradient-to-r from-[#25D366] to-[#1ebe5d] hover:from-[#20ba5a] hover:to-[#17a34e] text-white shadow-[0_0_25px_rgba(37,211,102,0.45)] hover:shadow-[0_0_30px_rgba(37,211,102,0.6)] cursor-pointer active:scale-[0.98]'
@@ -351,7 +351,7 @@ Merci de me confirmer la disponibilité et ma réservation.`;
                     ) : (
                       <>
                         <Lock className="w-4 h-4 text-gray-500" />
-                        <span>WhatsApp Verrouillé (En Location)</span>
+                        <span>WhatsApp Verrouillé (Non disponible)</span>
                       </>
                     )}
                   </button>

@@ -61,9 +61,9 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
               Disponible
             </span>
           ) : (
-            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md flex items-center shadow-[0_0_10px_rgba(245,158,11,0.25)]">
+            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md flex items-center">
               <Clock className="w-3 h-3 mr-1 text-amber-400" />
-              En Location
+              {car.nextAvailableDate ? car.nextAvailableDate : 'Loué / Réservé'}
             </span>
           )}
         </div>
@@ -145,7 +145,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
               <button
                 type="button"
                 disabled
-                title="Véhicule en location — WhatsApp verrouillé"
+                title="Véhicule actuellement indisponible — WhatsApp verrouillé"
                 className="p-2.5 bg-gray-800/60 text-gray-500 rounded-xl border border-white/5 cursor-not-allowed flex items-center justify-center shrink-0 opacity-60"
               >
                 <Lock className="w-4 h-4 text-gray-500" />
@@ -163,7 +163,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
               }}
               title={
                 !car.available
-                  ? 'Véhicule actuellement en location'
+                  ? 'Véhicule actuellement indisponible'
                   : (!car.carId || car.carId.trim() === '')
                   ? 'Calendrier indisponible'
                   : 'Réserver ce véhicule'
@@ -176,7 +176,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
             >
               <span>
                 {!car.available
-                  ? 'En Location'
+                  ? 'Indisponible'
                   : (!car.carId || car.carId.trim() === '')
                   ? 'Calendrier indisponible'
                   : 'Réserver'}
