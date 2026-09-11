@@ -23,6 +23,20 @@ const getStoredCars = (): Car[] => {
   if (carsCache && carsCache.length > 0) {
     return carsCache;
   }
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('tlemcen_cars_cache');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          carsCache = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
   return CARS_DATA;
 };
 

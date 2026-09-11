@@ -3,6 +3,7 @@ import { carService } from '../services/carService';
 import { FleetFilter } from '../components/fleet/FleetFilter';
 import { CarCard } from '../components/fleet/CarCard';
 import { Car } from '../types';
+import { useAdminData } from '../context/AdminDataContext';
 import { Sparkles, Car as CarIcon, HelpCircle } from 'lucide-react';
 
 interface FleetProps {
@@ -11,6 +12,7 @@ interface FleetProps {
 }
 
 export const Fleet: React.FC<FleetProps> = ({ onSelectCar, onViewCarDetails }) => {
+  const { cars } = useAdminData();
   const [selectedCategory, setSelectedCategory] = useState<string>('Toutes');
   const [selectedTransmission, setSelectedTransmission] = useState<string>('Toutes');
   const [selectedFuel, setSelectedFuel] = useState<string>('Tous');
@@ -37,7 +39,7 @@ export const Fleet: React.FC<FleetProps> = ({ onSelectCar, onViewCarDetails }) =
     availability: selectedAvailability,
     maxPriceDZD,
     searchQuery,
-  });
+  }, cars);
 
   return (
     <div className="pt-28 pb-20 bg-[#07070a] min-h-screen">

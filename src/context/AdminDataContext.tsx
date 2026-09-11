@@ -170,8 +170,27 @@ const defaultInitialBookings: BookingRequest[] = [
 const AdminDataContext = createContext<AdminDataContextType | undefined>(undefined);
 
 export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // 1. Cars state
+  // 1. Cars state with instant localStorage cache check
   const [cars, setCars] = useState<Car[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('tlemcen_cars_cache');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const formatted = parsed.map((c: any) => ({
+              ...c,
+              reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
+            }));
+            carService.setCarsCache(formatted);
+            return formatted;
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading cars cache from localStorage:', e);
+      }
+    }
+
     const formatted = CARS_DATA.map((c) => ({
       ...c,
       reservationUrl: c.reservationUrl || `https://tlemcen-car.onrender.com/?carId=${encodeURIComponent(c.carId || c.id)}&embed=true&theme=emerald`
@@ -260,6 +279,11 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           }));
           setCars(formattedCars);
           carService.setCarsCache(formattedCars);
+          try {
+            localStorage.setItem('tlemcen_cars_cache', JSON.stringify(formattedCars));
+          } catch (e) {
+            // ignore
+          }
         }
 
         if (isMounted && sbBookings && Array.isArray(sbBookings) && sbBookings.length > 0) {
@@ -285,6 +309,11 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             }));
             setCars(formattedCars);
             carService.setCarsCache(formattedCars);
+            try {
+              localStorage.setItem('tlemcen_cars_cache', JSON.stringify(formattedCars));
+            } catch (e) {
+              // ignore
+            }
           }
 
           if (Array.isArray(data.bookings) && data.bookings.length > 0) {
@@ -384,6 +413,11 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }));
       setCars(formattedCars);
       carService.setCarsCache(formattedCars);
+      try {
+        localStorage.setItem('tlemcen_cars_cache', JSON.stringify(formattedCars));
+      } catch (e) {
+        // ignore
+      }
       return formattedCars;
     }
     return cars;
