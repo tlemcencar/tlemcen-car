@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Car, BookingRequest, TlemcenSpot } from '../types';
-import { AgencySettings, ToastMessage } from '../types/admin';
+import { AgencySettings, ToastMessage, SiteViewsData } from '../types/admin';
 import { CARS_DATA } from '../data/carsData';
 import { DEFAULT_SPOTS } from '../data/spotsData';
 import { AGENCY_DETAILS } from '../utils/constants';
@@ -12,6 +12,7 @@ import {
   deleteCarFromSupabase,
   saveBookingsToSupabase,
   deleteBookingFromSupabase,
+  saveViewsToSupabase,
 } from '../lib/supabase';
 
 interface AdminDataContextType {
@@ -40,6 +41,10 @@ interface AdminDataContextType {
   toasts: ToastMessage[];
   showToast: (type: ToastMessage['type'], title: string, message?: string) => void;
   removeToast: (id: string) => void;
+
+  views: SiteViewsData;
+  recordSiteView: (carId?: string) => Promise<void>;
+  resetViews: (startingCount?: number) => Promise<void>;
 }
 
 const defaultSettings: AgencySettings = {
@@ -263,6 +268,116 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('info', 'Lieux réinitialisés', 'Les 4 lieux par défaut de Tlemcen ont été restaurés.');
   };
 
+  // 5. Site Views & Analytics
+  const defaultViews: SiteViewsData = {
+    totalViews: 1248,
+    todayViews: 38,
+    lastDate: new Date().toISOString().split('T')[0],
+    carViews: {
+      "mercedes-s-class-maybach": 142,
+      "hyundai-tucson-n-line": 98,
+      "kia-0114": 115,
+      "picanto-gt-line": 130,
+      "clio-4-rs": 105,
+      "peugeot-208-gt": 88,
+      "fiat-tipo": 74,
+      "clio-5-intens": 92,
+      "seat-ibiza-fr": 86,
+      "fiat-500x": 68
+    },
+  };
+
+  const [views, setViews] = useState<SiteViewsData>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('tlemcen_views_cache');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.totalViews === 'number') {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading views from localStorage:', e);
+      }
+    }
+    return defaultViews;
+  });
+
+  const recordSiteView = async (carId?: string | unknown) => {
+    // Ensure carId is strictly a valid string (never an event or DOM node)
+    const validCarId = typeof carId === 'string' && carId.trim().length > 0 ? carId.trim() : undefined;
+    const isCarView = !!validCarId;
+    const today = new Date().toISOString().split('T')[0];
+
+    setViews((prev) => {
+      const isNewDay = prev.lastDate !== today;
+      const newViews: SiteViewsData = {
+        totalViews: (prev.totalViews || 0) + (isCarView ? 0 : 1),
+        todayViews: isNewDay ? (isCarView ? 0 : 1) : (prev.todayViews || 0) + (isCarView ? 0 : 1),
+        lastDate: today,
+        carViews: {
+          ...(prev.carViews || {}),
+          ...(validCarId ? { [validCarId]: ((prev.carViews && prev.carViews[validCarId]) || 0) + 1 } : {}),
+        },
+      };
+      try {
+        localStorage.setItem('tlemcen_views_cache', JSON.stringify(newViews));
+      } catch (e) {}
+      return newViews;
+    });
+
+    try {
+      const res = await fetch('/api/views', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ carId: validCarId, incrementSite: !isCarView }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.views) {
+          setViews(data.views);
+          try {
+            localStorage.setItem('tlemcen_views_cache', JSON.stringify(data.views));
+          } catch (e) {}
+          saveViewsToSupabase(data.views).catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.warn('Could not record view to server:', err);
+    }
+  };
+
+  const resetViews = async (startingCount: number = 0) => {
+    const parsed = typeof startingCount === 'number' && !isNaN(startingCount)
+      ? startingCount
+      : parseInt(String(startingCount), 10) || 0;
+    const safeCount = Math.max(0, parsed);
+    const today = new Date().toISOString().split('T')[0];
+    const newViews: SiteViewsData = {
+      totalViews: safeCount,
+      todayViews: 0,
+      lastDate: today,
+      carViews: {},
+    };
+    setViews(newViews);
+    try {
+      localStorage.setItem('tlemcen_views_cache', JSON.stringify(newViews));
+    } catch (e) {}
+
+    try {
+      await fetch('/api/admin/views/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ startingCount: safeCount }),
+      });
+      await saveViewsToSupabase(newViews);
+      showToast('success', 'Compteur de vues mis à jour', `Le compteur a été réglé à ${safeCount.toLocaleString()} vues.`);
+    } catch (e) {
+      showToast('info', 'Compteur mis à jour', `Le compteur est maintenant à ${safeCount.toLocaleString()} vues.`);
+    }
+  };
+
   // Fetch full store from Supabase / Express server on mount
   useEffect(() => {
     let isMounted = true;
@@ -270,7 +385,14 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     async function loadData() {
       // First attempt: Supabase
       try {
-        const { cars: sbCars, bookings: sbBookings } = await fetchFromSupabase();
+        const { cars: sbCars, bookings: sbBookings, views: sbViews } = await fetchFromSupabase();
+
+        if (isMounted && sbViews && typeof sbViews.totalViews === 'number') {
+          setViews(sbViews);
+          try {
+            localStorage.setItem('tlemcen_views_cache', JSON.stringify(sbViews));
+          } catch (e) {}
+        }
 
         if (isMounted && sbCars && Array.isArray(sbCars) && sbCars.length > 0) {
           const formattedCars = sbCars.map((c) => ({
@@ -318,6 +440,13 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
           if (Array.isArray(data.bookings) && data.bookings.length > 0) {
             setBookings(data.bookings);
+          }
+
+          if (data.views && typeof data.views.totalViews === 'number') {
+            setViews(data.views);
+            try {
+              localStorage.setItem('tlemcen_views_cache', JSON.stringify(data.views));
+            } catch (e) {}
           }
         }
       } catch (err) {
@@ -582,6 +711,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addSpot,
         deleteSpot,
         resetSpotsToDefault,
+        views,
+        recordSiteView,
+        resetViews,
         toasts,
         showToast,
         removeToast,

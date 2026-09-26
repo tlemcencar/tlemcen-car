@@ -6,6 +6,55 @@
     <title>Tlemcen Car Luxury & Prestige - Location de Voitures VIP à Tlemcen</title>
     <meta name="description" content="Louez des véhicules de prestige et SUV à Tlemcen et à l'Aéroport Messali Hadj Zenata. Service VIP 24h/7j, flotte premium avec Mercedes G63, Porsche, Range Rover." />
     <meta name="keywords" content="location voiture tlemcen, location voiture luxe algerie, aeroport zenata tlemcen car rental, mercedes g63 tlemcen" />
+    <script>
+      // Safe JSON.stringify guard: prevent uncaught circular structure errors from DOM elements/React Fibers
+      (function() {
+        const _origStringify = JSON.stringify;
+        JSON.stringify = function(value, replacer, space) {
+          if (value && typeof value === 'object') {
+            if (value.nodeType || typeof value.tagName === 'string' || (typeof Node !== 'undefined' && value instanceof Node)) {
+              return '{}';
+            }
+          }
+          const seen = new WeakSet();
+          function safeReplacer(k, v) {
+            if (v && typeof v === 'object') {
+              if (v.nodeType || typeof v.tagName === 'string' || (typeof Node !== 'undefined' && v instanceof Node) || Object.keys(v).some(key => key.startsWith('__reactFiber') || key === 'stateNode')) {
+                return undefined;
+              }
+              if (seen.has(v)) {
+                return '[Circular]';
+              }
+              seen.add(v);
+            }
+            return v;
+          }
+          try {
+            if (typeof replacer === 'function') {
+              return _origStringify(value, function(k, v) {
+                if (v && typeof v === 'object') {
+                  if (v.nodeType || typeof v.tagName === 'string' || (typeof Node !== 'undefined' && v instanceof Node) || Object.keys(v).some(key => key.startsWith('__reactFiber') || key === 'stateNode')) {
+                    return undefined;
+                  }
+                  if (seen.has(v)) return '[Circular]';
+                  seen.add(v);
+                }
+                return replacer(k, v);
+              }, space);
+            } else if (Array.isArray(replacer)) {
+              return _origStringify(value, replacer, space);
+            }
+            return _origStringify(value, safeReplacer, space);
+          } catch (e) {
+            try {
+              return _origStringify(value, safeReplacer, space);
+            } catch {
+              return '{}';
+            }
+          }
+        };
+      })();
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-YHDBE0RSEC"></script>
     <script>

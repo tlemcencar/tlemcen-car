@@ -9,6 +9,7 @@ export interface Car {
   category: 'Luxe' | 'Sport' | 'SUV' | 'Berline VIP' | 'Économique Premium' | 'Cabriolet';
   priceDZD: number; // Price per day in Algerian Dinar
   priceEUR: number; // Price per day in Euros
+  hidePrice?: boolean; // When true, price is hidden on client view (shows 'Prix sur demande')
   image: string;
   gallery: string[];
   transmission: 'Automatique' | 'Manuelle';

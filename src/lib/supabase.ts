@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { AgencySettings } from '../types/admin';
+import { AgencySettings, SiteViewsData } from '../types/admin';
 import { Car, BookingRequest } from '../types';
 
 /**
@@ -908,22 +908,24 @@ export const fetchFromSupabase = async (): Promise<{
   settings: AgencySettings | null;
   cars: Car[] | null;
   bookings: BookingRequest[] | null;
+  views: SiteViewsData | null;
 }> => {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return { settings: null, cars: null, bookings: null };
+    return { settings: null, cars: null, bookings: null, views: null };
   }
 
   try {
-    const [settingsRes, carsRes, bookingsRes] = await Promise.all([
+    const [settingsRes, carsRes, bookingsRes, viewsRes] = await Promise.all([
       supabase.from('app_settings').select('*').eq('id', 'agency_settings').maybeSingle(),
       supabase.from('cars').select('*').order('updated_at', { ascending: false }),
       supabase.from('bookings').select('*').order('created_at', { ascending: false }),
+      supabase.from('app_settings').select('*').eq('id', 'site_analytics').maybeSingle(),
     ]);
 
     if (settingsRes.error && isTableMissingError(settingsRes.error)) {
       console.warn('Supabase tables not found. Please execute the SQL script in your Supabase SQL Editor.');
-      return { settings: null, cars: null, bookings: null };
+      return { settings: null, cars: null, bookings: null, views: null };
     }
 
     let settings: AgencySettings | null = null;
@@ -941,14 +943,47 @@ export const fetchFromSupabase = async (): Promise<{
       bookings = bookingsRes.data.map((row: any) => (row.data ? row.data : row)) as BookingRequest[];
     }
 
-    return { settings, cars, bookings };
+    let views: SiteViewsData | null = null;
+    if (viewsRes.data && viewsRes.data.data) {
+      views = viewsRes.data.data as SiteViewsData;
+    }
+
+    return { settings, cars, bookings, views };
   } catch (err: any) {
     if (isTableMissingError(err)) {
       console.warn('Supabase tables missing. Please run the SQL initialization script.');
     } else {
       console.warn('Could not fetch data from Supabase:', err?.message || err);
     }
-    return { settings: null, cars: null, bookings: null };
+    return { settings: null, cars: null, bookings: null, views: null };
+  }
+};
+
+/**
+ * Save site analytics / views to Supabase
+ */
+export const saveViewsToSupabase = async (views: SiteViewsData): Promise<boolean> => {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.from('app_settings').upsert(
+      {
+        id: 'site_analytics',
+        data: views,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' }
+    );
+
+    if (error) {
+      console.warn('Could not save views to Supabase:', error.message || error);
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    console.warn('Exception saving views to Supabase:', err?.message || err);
+    return false;
   }
 };
 

@@ -445,5 +445,22 @@
       "status": "confirmee",
       "createdAt": "2026-07-28T10:15:00Z"
     }
-  ]
+  ],
+  "views": {
+    "totalViews": 1250,
+    "todayViews": 40,
+    "lastDate": "2026-09-24",
+    "carViews": {
+      "mercedes-s-class-maybach": 142,
+      "hyundai-tucson-n-line": 98,
+      "kia-0114": 115,
+      "picanto-gt-line": 130,
+      "clio-4-rs": 106,
+      "peugeot-208-gt": 88,
+      "fiat-tipo": 74,
+      "clio-5-intens": 92,
+      "seat-ibiza-fr": 86,
+      "fiat-500x": 68
+    }
+  }
 }

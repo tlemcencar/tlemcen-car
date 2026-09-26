@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Car } from '../../types';
 import { ImageManager } from './ImageManager';
-import { X, Check, Plus, Trash2, Car as CarIcon, Sparkles, Shield, Fuel, Gauge, Users, DollarSign, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Check, Plus, Trash2, Car as CarIcon, Sparkles, Shield, Fuel, Gauge, Users, DollarSign, Calendar, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { AGENCY_DETAILS } from '../../utils/constants';
 
 interface CarFormModalProps {
@@ -27,6 +27,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
     category: 'Luxe',
     priceDZD: 25000,
     priceEUR: 110,
+    hidePrice: false,
     depositDZD: 100000,
     depositEUR: 450,
     image: '',
@@ -59,6 +60,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
       const defaultResUrl = car.reservationUrl || (car.carId || car.id ? `https://tlemcen-car.onrender.com/?carId=${car.carId || car.id}&embed=true&theme=emerald` : '');
       setFormData({
         ...car,
+        hidePrice: !!car.hidePrice,
         carId: car.carId || car.id || '',
         reservationUrl: defaultResUrl,
       });
@@ -73,6 +75,7 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
         category: 'Luxe',
         priceDZD: 25000,
         priceEUR: 110,
+        hidePrice: false,
         depositDZD: 100000,
         depositEUR: 450,
         image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?q=80&w=1200&auto=format&fit=crop',
@@ -386,6 +389,62 @@ export const CarFormModal: React.FC<CarFormModalProps> = ({
             {/* Tab 2: Pricing */}
             {activeTab === 'pricing' && (
               <div className="space-y-4">
+                {/* Bouton Afficher / Masquer le prix sur le site */}
+                <div className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  formData.hidePrice
+                    ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+                    : 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                }`}>
+                  <div className="flex items-center space-x-3.5">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${
+                      formData.hidePrice
+                        ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                        : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                    }`}>
+                      {formData.hidePrice ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-bold text-white">Affichage du Prix aux Clients</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          formData.hidePrice
+                            ? 'bg-amber-500 text-black'
+                            : 'bg-emerald-500 text-black'
+                        }`}>
+                          {formData.hidePrice ? 'Prix Masqué' : 'Prix Affiché'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-300 mt-0.5">
+                        {formData.hidePrice
+                          ? 'Le tarif est actuellement masqué sur le site client (affiché comme « Prix sur demande »).'
+                          : 'Le tarif journalier est actuellement affiché publiquement sur le site pour tous les clients.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, hidePrice: !formData.hidePrice })}
+                    className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shrink-0 cursor-pointer shadow-md ${
+                      formData.hidePrice
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                        : 'bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20'
+                    }`}
+                  >
+                    {formData.hidePrice ? (
+                      <>
+                        <Eye className="w-4 h-4" />
+                        <span>Afficher le Prix</span>
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="w-4 h-4" />
+                        <span>Masquer le Prix</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-[#12121c] p-4 rounded-xl border border-white/10 space-y-3">
                     <h4 className="font-bold text-white text-sm flex items-center text-[#ff2e4d]">

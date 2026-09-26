@@ -340,15 +340,40 @@ const DEFAULT_BOOKINGS = [
   }
 ];
 
+const DEFAULT_VIEWS = {
+  totalViews: 1248,
+  todayViews: 38,
+  lastDate: new Date().toISOString().split('T')[0],
+  carViews: {
+    "mercedes-s-class-maybach": 142,
+    "hyundai-tucson-n-line": 98,
+    "kia-0114": 115,
+    "picanto-gt-line": 130,
+    "clio-4-rs": 105,
+    "peugeot-208-gt": 88,
+    "fiat-tipo": 74,
+    "clio-5-intens": 92,
+    "seat-ibiza-fr": 86,
+    "fiat-500x": 68
+  } as Record<string, number>
+};
+
 function readAdminStore() {
   try {
     if (fs.existsSync(STORE_FILE)) {
       const content = fs.readFileSync(STORE_FILE, 'utf-8');
       const parsed = JSON.parse(content);
+      const today = new Date().toISOString().split('T')[0];
+      const views = parsed.views && typeof parsed.views === 'object' ? parsed.views : { ...DEFAULT_VIEWS };
+      if (views.lastDate !== today) {
+        views.todayViews = 0;
+        views.lastDate = today;
+      }
       return {
         cars: Array.isArray(parsed.cars) ? parsed.cars : DEFAULT_CARS,
         settings: parsed.settings && typeof parsed.settings === 'object' ? parsed.settings : DEFAULT_SETTINGS,
         bookings: Array.isArray(parsed.bookings) ? parsed.bookings : DEFAULT_BOOKINGS,
+        views: views,
       };
     }
   } catch (err) {
@@ -359,18 +384,20 @@ function readAdminStore() {
     cars: DEFAULT_CARS,
     settings: DEFAULT_SETTINGS,
     bookings: DEFAULT_BOOKINGS,
+    views: DEFAULT_VIEWS,
   };
   writeAdminStore(initialData);
   return initialData;
 }
 
-function writeAdminStore(data: { cars?: any[]; settings?: any; bookings?: any[] }) {
+function writeAdminStore(data: { cars?: any[]; settings?: any; bookings?: any[]; views?: any }) {
   try {
     const current = fs.existsSync(STORE_FILE) ? JSON.parse(fs.readFileSync(STORE_FILE, 'utf-8')) : {};
     const updated = {
       cars: Array.isArray(data.cars) ? data.cars : (current.cars || DEFAULT_CARS),
       settings: data.settings && typeof data.settings === 'object' ? data.settings : (current.settings || DEFAULT_SETTINGS),
       bookings: Array.isArray(data.bookings) ? data.bookings : (current.bookings || DEFAULT_BOOKINGS),
+      views: data.views && typeof data.views === 'object' ? data.views : (current.views || DEFAULT_VIEWS),
     };
     fs.writeFileSync(STORE_FILE, JSON.stringify(updated, null, 2), 'utf-8');
     return updated;
@@ -466,6 +493,67 @@ async function startServer() {
     } catch (error) {
       console.error('Error saving bookings:', error);
       res.status(500).json({ error: 'Failed to save bookings' });
+    }
+  });
+
+  // Site Views & Analytics API Endpoints
+  app.get('/api/views', (req, res) => {
+    try {
+      const store = readAdminStore();
+      res.json(store.views || DEFAULT_VIEWS);
+    } catch (error) {
+      console.error('Error getting views:', error);
+      res.status(500).json({ error: 'Failed to read views' });
+    }
+  });
+
+  app.post('/api/views', (req, res) => {
+    try {
+      const { carId, incrementSite = true } = req.body || {};
+      const store = readAdminStore();
+      const views = { ...(store.views || DEFAULT_VIEWS) };
+      if (!views.carViews || typeof views.carViews !== 'object') views.carViews = {};
+      const today = new Date().toISOString().split('T')[0];
+
+      if (views.lastDate !== today) {
+        views.todayViews = 0;
+        views.lastDate = today;
+      }
+
+      if (incrementSite) {
+        views.totalViews = (views.totalViews || 0) + 1;
+        views.todayViews = (views.todayViews || 0) + 1;
+      }
+
+      if (carId && typeof carId === 'string' && carId.trim().length > 0) {
+        const cleanId = carId.trim();
+        views.carViews[cleanId] = (views.carViews[cleanId] || 0) + 1;
+      }
+
+      const updated = writeAdminStore({ ...store, views });
+      res.json({ success: true, views: updated.views });
+    } catch (error) {
+      console.error('Error recording view:', error);
+      res.status(500).json({ error: 'Failed to record view' });
+    }
+  });
+
+  app.post('/api/admin/views/reset', (req, res) => {
+    try {
+      const { startingCount = 0 } = req.body || {};
+      const store = readAdminStore();
+      const today = new Date().toISOString().split('T')[0];
+      const views = {
+        totalViews: Math.max(0, Number(startingCount) || 0),
+        todayViews: 0,
+        lastDate: today,
+        carViews: {},
+      };
+      const updated = writeAdminStore({ ...store, views });
+      res.json({ success: true, views: updated.views });
+    } catch (error) {
+      console.error('Error resetting views:', error);
+      res.status(500).json({ error: 'Failed to reset views' });
     }
   });
 

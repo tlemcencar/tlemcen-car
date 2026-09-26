@@ -25,7 +25,8 @@ import {
   Layers,
   Image as ImageIcon,
   Calendar,
-  RefreshCw
+  RefreshCw,
+  EyeOff
 } from 'lucide-react';
 
 interface CarManagementProps {
@@ -37,7 +38,7 @@ export const CarManagement: React.FC<CarManagementProps> = ({
   onOpenAddModal,
   onOpenEditModal,
 }) => {
-  const { cars, deleteCar, duplicateCar, toggleCarStatus, reloadCarsFromSupabase } = useAdminData();
+  const { cars, deleteCar, duplicateCar, toggleCarStatus, reloadCarsFromSupabase, updateCar } = useAdminData();
   const { currency } = useCurrency();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -240,8 +241,25 @@ export const CarManagement: React.FC<CarManagementProps> = ({
                   {/* Pricing row */}
                   <div className="flex justify-between items-center bg-[#14141e] p-3 rounded-xl border border-white/5 text-xs">
                     <div>
-                      <span className="text-[10px] text-gray-400">Tarif/jour</span>
-                      <div className="font-black text-[#ff2e4d] text-base">{priceFormatted}</div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[10px] text-gray-400">Tarif/jour</span>
+                        <button
+                          type="button"
+                          onClick={() => updateCar(car.id, { hidePrice: !car.hidePrice })}
+                          title={car.hidePrice ? 'Prix actuellement masqué aux clients. Cliquer pour afficher le prix.' : 'Prix actuellement affiché aux clients. Cliquer pour masquer le prix.'}
+                          className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+                            car.hidePrice
+                              ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 hover:bg-amber-500 hover:text-black'
+                              : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500 hover:text-black'
+                          }`}
+                        >
+                          {car.hidePrice ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          <span>{car.hidePrice ? 'Prix Masqué' : 'Prix Affiché'}</span>
+                        </button>
+                      </div>
+                      <div className={`font-black text-base mt-0.5 ${car.hidePrice ? 'text-gray-400 line-through text-sm' : 'text-[#ff2e4d]'}`}>
+                        {priceFormatted}
+                      </div>
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] text-gray-400">Caution</span>
@@ -297,6 +315,19 @@ export const CarManagement: React.FC<CarManagementProps> = ({
                 >
                   <Edit2 className="w-3.5 h-3.5 text-[#ff2e4d]" />
                   <span>Modifier</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => updateCar(car.id, { hidePrice: !car.hidePrice })}
+                  className={`p-2 rounded-xl border transition-colors ${
+                    car.hidePrice
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500 hover:text-black'
+                      : 'bg-[#181824] hover:bg-white/10 text-gray-300 hover:text-white border-white/10'
+                  }`}
+                  title={car.hidePrice ? 'Prix masqué aux clients. Cliquer pour afficher le prix.' : 'Prix affiché aux clients. Cliquer pour masquer le prix.'}
+                >
+                  {car.hidePrice ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
 
                 <button

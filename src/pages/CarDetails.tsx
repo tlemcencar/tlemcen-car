@@ -146,7 +146,13 @@ export const CarDetails: React.FC<CarDetailsProps> = ({ car, onBack }) => {
               <div className="bg-gradient-to-r from-[#14141e] to-[#1a1a28] p-4 sm:p-5 rounded-xl border border-white/10 flex items-center justify-between">
                 <div>
                   <span className="text-xs text-gray-400 font-medium">Tarif journalier</span>
-                  <div className="text-2xl sm:text-3xl font-black text-[#ff2e4d] font-serif">{priceFormatted}</div>
+                  {car.hidePrice ? (
+                    <div className="text-xl sm:text-2xl font-black text-amber-400 font-serif mt-0.5">
+                      Prix sur demande
+                    </div>
+                  ) : (
+                    <div className="text-2xl sm:text-3xl font-black text-[#ff2e4d] font-serif">{priceFormatted}</div>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-gray-400 font-medium">Caution requise</span>

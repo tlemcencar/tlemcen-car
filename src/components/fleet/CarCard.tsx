@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Fuel, Gauge, Users, Zap, ShieldAlert, ArrowRight, Star, CheckCircle2, PhoneCall, Clock, Lock } from 'lucide-react';
+import { Fuel, Gauge, Users, Zap, ShieldAlert, ArrowRight, Star, CheckCircle2, PhoneCall, Clock, Lock, Eye } from 'lucide-react';
 import { Car } from '../../types';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useSettings } from '../../context/SettingsContext';
+import { useAdminData } from '../../context/AdminDataContext';
 import { formatPrice } from '../../utils/currency';
 import { useBooking } from '../../context/BookingContext';
 import { CarPhotoSlider } from './CarPhotoSlider';
@@ -19,7 +20,9 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
   const { currency } = useCurrency();
   const { settings } = useSettings();
   const { openBookingModal } = useBooking();
+  const { views } = useAdminData();
 
+  const carViews = (views?.carViews && views.carViews[car.id]) || 0;
   const priceFormatted = formatPrice(car.priceDZD, car.priceEUR, currency);
   const depositFormatted = formatPrice(car.depositDZD, car.depositEUR, currency);
 
@@ -68,10 +71,18 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
           )}
         </div>
 
-        {/* Engine Specs Pill bottom left */}
-        <div className="absolute bottom-3 left-3 z-10 pointer-events-none flex items-center bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs text-gray-300">
-          <Zap className="w-3.5 h-3.5 text-[#ff2e4d] mr-1.5" />
-          <span>{car.powerHP} CH • {car.acceleration}</span>
+        {/* Engine Specs & Views Pill bottom */}
+        <div className="absolute bottom-3 left-3 right-3 z-10 pointer-events-none flex items-center justify-between">
+          <div className="flex items-center bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs text-gray-300">
+            <Zap className="w-3.5 h-3.5 text-[#ff2e4d] mr-1.5" />
+            <span>{car.powerHP} CH • {car.acceleration}</span>
+          </div>
+          {carViews > 0 && (
+            <div className="flex items-center bg-black/85 backdrop-blur-md px-2 py-1 rounded-lg border border-white/15 text-[11px] font-semibold text-cyan-300 shadow-md">
+              <Eye className="w-3 h-3 mr-1 text-cyan-400" />
+              <span>{carViews} vues</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -119,10 +130,18 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onSelectCar, onViewDetail
         {/* Price & Action Buttons */}
         <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Tarif par jour</div>
-            <div className="text-xl font-black text-white flex items-baseline">
-              <span className="text-[#ff2e4d] mr-1 font-serif">{priceFormatted}</span>
+            <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+              {car.hidePrice ? 'Tarif' : 'Tarif par jour'}
             </div>
+            {car.hidePrice ? (
+              <div className="text-base font-black text-amber-400 font-serif my-0.5">
+                Prix sur demande
+              </div>
+            ) : (
+              <div className="text-xl font-black text-white flex items-baseline">
+                <span className="text-[#ff2e4d] mr-1 font-serif">{priceFormatted}</span>
+              </div>
+            )}
             <div className="text-[10px] text-gray-400 flex items-center mt-0.5">
               <ShieldAlert className="w-3 h-3 text-gray-400 mr-1 shrink-0" />
               Caution : {depositFormatted}

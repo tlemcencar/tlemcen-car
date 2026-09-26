@@ -1,6 +1,7 @@
 import React from 'react';
-import { Car, Phone, Mail, MapPin, Clock, ShieldCheck, Instagram, Facebook, Send, ArrowRight, Video, Youtube } from 'lucide-react';
+import { Car, Phone, Mail, MapPin, Clock, ShieldCheck, Instagram, Facebook, Send, ArrowRight, Video, Youtube, Eye } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
+import { useAdminData } from '../../context/AdminDataContext';
 
 interface FooterProps {
   onNavigate: (page: string) => void;
@@ -8,6 +9,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { settings } = useSettings();
+  const { views } = useAdminData();
 
   const handleLinkClick = (page: string) => {
     onNavigate(page);
@@ -173,6 +175,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-gray-400 space-y-4 md:space-y-0">
           <p>© {new Date().getFullYear()} {settings.name}. Tous droits réservés.</p>
+
+          {/* Visitor / View Count Badge */}
+          <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-[#121218] border border-white/10 text-xs text-gray-300 shadow-inner">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <Eye className="w-3.5 h-3.5 text-[#ff2e4d]" />
+            <span className="font-semibold text-white">{(views?.totalViews || 0).toLocaleString()}</span>
+            <span className="text-gray-400">visites</span>
+          </div>
+
           <div className="flex items-center space-x-4">
             {settings.socials.instagram && (
               <a

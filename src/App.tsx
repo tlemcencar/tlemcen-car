@@ -22,7 +22,7 @@ import { Car } from './types';
 import { ReservationFrame } from './components/booking/ReservationFrame';
 
 export function AppContent() {
-  const { cars } = useAdminData();
+  const { cars, recordSiteView } = useAdminData();
   const [currentPage, setCurrentPage] = useState<string>('home');
   const [selectedDetailCar, setSelectedDetailCar] = useState<Car | null>(cars[0] || null);
 
@@ -36,6 +36,15 @@ export function AppContent() {
     : null;
 
   useEffect(() => {
+    // Record client visit to the site (once per browsing session to prevent spam)
+    if (typeof window !== 'undefined') {
+      const alreadyViewedSession = sessionStorage.getItem('tlemcen_site_view_recorded');
+      if (!alreadyViewedSession) {
+        sessionStorage.setItem('tlemcen_site_view_recorded', 'true');
+        recordSiteView();
+      }
+    }
+
     // Check path or hash for /admin or #admin routing
     if (
       window.location.pathname.includes('/admin') ||
@@ -51,6 +60,7 @@ export function AppContent() {
   };
 
   const handleViewCarDetails = (car: Car) => {
+    recordSiteView(car.id);
     setSelectedDetailCar(car);
     setCurrentPage('car-details');
     window.scrollTo({ top: 0, behavior: 'smooth' });

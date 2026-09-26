@@ -91,9 +91,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({ onNavigateToFleet })
     const returnLoc = searchState.returnLocation || 'Aéroport Tlemcen Zenata (Messali Hadj)';
     const additionalDriverText = options.additionalDriver ? 'Oui' : 'Non';
     const childSeatText = options.childSeat ? 'Oui' : 'Non';
-    const totalFormatted = currency === 'EUR'
-      ? `${priceCalc.totalEUR} €`
-      : `${priceCalc.totalDZD.toLocaleString('fr-FR')} DA`;
+    const totalFormatted = selectedCar.hidePrice
+      ? 'Prix sur demande'
+      : (currency === 'EUR'
+        ? `${priceCalc.totalEUR} €`
+        : `${priceCalc.totalDZD.toLocaleString('fr-FR')} DA`);
 
     const message = `Bonjour Tlemcen Car 👋
 
@@ -313,11 +315,17 @@ Merci de me confirmer la disponibilité et ma réservation.`;
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 border-t border-white/10">
                 <div className="shrink-0">
                   <p className="text-xs text-gray-400">Total pour {totalDays} jour(s)</p>
-                  <p className="text-2xl font-black text-white">
-                    <span className="text-[#ff2e4d]">
-                      {currency === 'EUR' ? `${priceCalc.totalEUR} €` : `${priceCalc.totalDZD.toLocaleString()} DA`}
-                    </span>
-                  </p>
+                  {selectedCar.hidePrice ? (
+                    <p className="text-xl sm:text-2xl font-black text-amber-400 font-serif">
+                      Prix sur demande
+                    </p>
+                  ) : (
+                    <p className="text-2xl font-black text-white">
+                      <span className="text-[#ff2e4d]">
+                        {currency === 'EUR' ? `${priceCalc.totalEUR} €` : `${priceCalc.totalDZD.toLocaleString()} DA`}
+                      </span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">

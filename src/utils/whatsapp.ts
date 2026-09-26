@@ -20,11 +20,11 @@ export function getWhatsAppBookingUrl(
     return `https://wa.me/${phone}?text=${defaultMsg}`;
   }
 
-  const priceFormatted = formatPrice(car.priceDZD, car.priceEUR, currency);
+  const priceFormatted = car.hidePrice ? 'Prix sur demande' : `${formatPrice(car.priceDZD, car.priceEUR, currency)} / jour`;
   let message = `Bonjour ${name} VIP 👋\n\n`;
   message += `Je souhaite réserver le véhicule suivant :\n`;
   message += `🚘 *${car.name}* (${car.brand} ${car.year})\n`;
-  message += `💰 Tarif : *${priceFormatted} / jour*\n`;
+  message += `💰 Tarif : *${priceFormatted}*\n`;
   message += `⚡ Categorie : ${car.category}\n`;
 
   if (pickupDate && returnDate) {

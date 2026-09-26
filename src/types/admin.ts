@@ -64,3 +64,10 @@ export interface ToastMessage {
 }
 
 export type AdminTab = 'dashboard' | 'cars' | 'bookings' | 'spots' | 'settings';
+
+export interface SiteViewsData {
+  totalViews: number;
+  todayViews: number;
+  lastDate: string;
+  carViews: Record<string, number>;
+}
