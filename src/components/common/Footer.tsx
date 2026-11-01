@@ -231,6 +231,36 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             )}
           </div>
         </div>
+
+        {/* SEO Keywords & Local Discovery Block for Google Indexation */}
+        <div className="pt-8 pb-4 border-b border-white/5 text-xs text-gray-500 leading-relaxed">
+          <p className="font-semibold text-gray-400 mb-2 uppercase tracking-wider text-[11px]">
+            Recherches fréquentes & Services de location à Tlemcen :
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            <span className="text-gray-400 font-medium">Location de voiture à Tlemcen</span>
+            <span>•</span>
+            <span className="text-gray-400 font-medium">Location de voiture</span>
+            <span>•</span>
+            <span className="text-gray-400 font-medium">Tlemcen</span>
+            <span>•</span>
+            <span className="text-gray-400 font-medium">Location de voiture à Tlemcen pas cher</span>
+            <span>•</span>
+            <span className="text-gray-400 font-medium">Voiture pas cher à Tlemcen</span>
+            <span>•</span>
+            <span className="text-gray-400 font-medium">Location de voiture à l'aéroport Zenata</span>
+            <span>•</span>
+            <span>Aéroport Messali Hadj Zenata</span>
+            <span>•</span>
+            <span>Location Clio 5 Tlemcen</span>
+            <span>•</span>
+            <span>Location Swift & Picanto</span>
+            <span>•</span>
+            <span>Plateau Lalla Setti</span>
+            <span>•</span>
+            <span>Service VIP & Assistance 24/7</span>
+          </div>
+        </div>
       </div>
     </footer>
   );

@@ -35,6 +35,9 @@ export function AppContent() {
     ? new URLSearchParams(window.location.search).get('carId')
     : null;
 
+  const isSitemap = typeof window !== 'undefined' && window.location.pathname === '/sitemap.xml';
+  const isRobots = typeof window !== 'undefined' && window.location.pathname === '/robots.txt';
+
   useEffect(() => {
     // Record client visit to the site (once per browsing session to prevent spam)
     if (typeof window !== 'undefined') {
@@ -65,6 +68,42 @@ export function AppContent() {
     setCurrentPage('car-details');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (isSitemap) {
+    const today = new Date().toISOString().split('T')[0];
+    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://tlemcen-car.pages.dev/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  ${cars.map((c) => `  <url>
+    <loc>https://tlemcen-car.pages.dev/?car=${encodeURIComponent(c.carId || c.id)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+    return (
+      <pre style={{ margin: 0, padding: 16, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace', fontSize: 13, background: '#fff', color: '#111' }}>
+        {sitemapXml}
+      </pre>
+    );
+  }
+
+  if (isRobots) {
+    return (
+      <pre style={{ margin: 0, padding: 16, fontFamily: 'monospace', fontSize: 14, background: '#fff', color: '#111' }}>
+{`User-agent: *
+Allow: /
+
+Sitemap: https://tlemcen-car.pages.dev/sitemap.xml`}
+      </pre>
+    );
+  }
 
   if (currentPage === 'admin') {
     return <AdminPage onNavigateToClient={() => handleNavigate('home')} />;

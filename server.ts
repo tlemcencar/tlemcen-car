@@ -638,6 +638,56 @@ async function startServer() {
     res.json({ status: 'ok' });
   });
 
+  // Dynamic SEO sitemap.xml for Google Crawler
+  app.get('/sitemap.xml', (req, res) => {
+    try {
+      const host = req.get('host') || 'tlemcencar.com';
+      const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+      const baseUrl = `${protocol}://${host}`;
+      const store = readAdminStore();
+      const cars = store.cars && Array.isArray(store.cars) ? store.cars : DEFAULT_CARS;
+
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+      // Main Pages
+      const today = new Date().toISOString().split('T')[0];
+      xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+
+      // Vehicle detail links
+      for (const car of cars) {
+        const carId = car.carId || car.id;
+        if (carId) {
+          xml += `  <url>\n    <loc>${baseUrl}/?car=${encodeURIComponent(carId)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+        }
+      }
+
+      xml += '</urlset>';
+
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache 24h
+      res.send(xml);
+    } catch (e) {
+      console.error('Error generating sitemap:', e);
+      res.status(500).send('Error generating sitemap');
+    }
+  });
+
+  // Dynamic robots.txt
+  app.get('/robots.txt', (req, res) => {
+    const host = req.get('host') || 'tlemcencar.com';
+    const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+    const baseUrl = `${protocol}://${host}`;
+
+    const robots = `User-agent: *
+Allow: /
+
+Sitemap: ${baseUrl}/sitemap.xml
+`;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(robots);
+  });
+
   // Serveur Vite en dev / Fichiers statiques dist en prod
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
