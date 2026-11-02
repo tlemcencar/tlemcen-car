@@ -74,13 +74,13 @@ export function AppContent() {
     const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://tlemcen-car.pages.dev/</loc>
+    <loc>https://tlemcencar.netlify.app/</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   ${cars.map((c) => `  <url>
-    <loc>https://tlemcen-car.pages.dev/?car=${encodeURIComponent(c.carId || c.id)}</loc>
+    <loc>https://tlemcencar.netlify.app/?car=${encodeURIComponent(c.carId || c.id)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -100,7 +100,7 @@ export function AppContent() {
 {`User-agent: *
 Allow: /
 
-Sitemap: https://tlemcen-car.pages.dev/sitemap.xml`}
+Sitemap: https://tlemcencar.netlify.app/sitemap.xml`}
       </pre>
     );
   }
